@@ -1,3 +1,7 @@
+## v2.0.0, 2015-09-xx
+
+ * forked from jamesarosen/date-with-offset
+
 ## v1.1.0, 2013-09-07
 
  * add `DateWithOffset.prototype.toJSON`
