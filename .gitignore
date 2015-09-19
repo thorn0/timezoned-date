@@ -2,3 +2,4 @@
 /lib/
 /test262/test262/
 /test262/prelude.js
+*.log
