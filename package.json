@@ -1,6 +1,6 @@
 {
   "name": "timezoned-date",
-  "version": "2.0.3",
+  "version": "2.0.7",
   "license": "Apache-2.0",
   "description": "Work with timezone-aware dates",
   "keywords": [
@@ -30,8 +30,9 @@
     "test": "mocha",
     "pretest262": "find test262/test262 -maxdepth 0 || git clone https://github.com/tc39/test262.git test262/test262 --depth 1",
     "test262": "cat test262/prelude.prefix lib/index.js test262/prelude.suffix > test262/prelude.js && test262-harness --prelude test262/prelude.js \"test262/test262/test/built-ins/Date/**/*.js\"",
-    "pretest262native": "find test262/test262 -maxdepth 0 || git clone https://github.com/tc39/test262.git test262/test262 --depth 1",
+    "pretest262native": "npm run pretest262",
     "test262native": "test262-harness \"test262/test262/test/built-ins/Date/**/*.js\"",
+    "prepublish": "npm run build",
     "build": "babel --optional es7.classProperties,es7.decorators src --out-dir lib",
     "watch": "babel --optional es7.classProperties,es7.decorators src --watch --out-dir lib"
   }

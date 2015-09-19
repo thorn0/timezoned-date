@@ -19,7 +19,8 @@
         "no-unused-vars": [
             2, {
                 "args": "after-used",
-                "argsIgnorePattern": "^_"
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_"
             }
         ]
     },

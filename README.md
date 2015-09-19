@@ -20,6 +20,10 @@ jsdom.env({
 });
 ```
 
+May also be useful for tests and for server-side rendering with React.
+
+Known issue: [daylight saving time support](https://github.com/jamesarosen/date-with-offset/pull/1).
+
 *README TBD*
 
 *Pre-fork README with minor changes follows.*
