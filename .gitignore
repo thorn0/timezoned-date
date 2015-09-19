@@ -1,2 +1,4 @@
 /node_modules/
 /lib/
+/test262/test262/
+/test262/prelude.js

@@ -1,0 +1,3 @@
+})(this, module, module.exports);
+
+Date = module.exports.makeConstructor();

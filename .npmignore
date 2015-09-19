@@ -3,3 +3,5 @@
 .gitignore
 .eslintrc
 .editorconfig
+.npmignore
+/test262/
