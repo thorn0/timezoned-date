@@ -134,7 +134,12 @@ function makeConstructor(defaultOffset = -new OriginalDate().getTimezoneOffset()
 
     var _TimezonedDate = function(_a1, _a2, _a3, _a4, _a5, _a6, _a7) {
         if (!(this instanceof _TimezonedDate)) {
-            return OriginalDate(); // TBD
+            // When Date() is called without new, it ignores its arguments and
+            // returns same as new Date().toString()
+            if (bound) {
+                return new TimezonedDate().toString();
+            }
+            return new TimezonedDate(_a1).toString();
         }
         return new TimezonedDate(...arguments);
     };
