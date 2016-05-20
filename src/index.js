@@ -1,12 +1,14 @@
+/*jshint esversion: 6*/
 'use strict';
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000,
     OFFSET_SUFFIX = /(((GMT)?[\+\-]\d\d:?\d\d)|Z)(\s*\(.+\))?$/,
     daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    OriginalDate = global.Date;
+    NativeDate = global.Date,
+    nativeProto = NativeDate.prototype;
 
-function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) {
+function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
 
     // If the resulting constructor is "bound",
     //    - it's signature is compatible with built-in Date,
@@ -16,39 +18,56 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
     //    - so it can create objects with different offsets.
     var bound = isOffset(boundOffset);
 
-    class TimezonedDate extends OriginalDate {
-        constructor(...args) {
-            var offset = bound ? boundOffset : args.pop();
-            super(...args);
-            if (!isOffset(offset)) {
-                throw new TypeError('TimezonedDate requires an offset');
+    var proto = Object.create(nativeProto);
+
+    function TimezonedDate(_a1, _a2, _a3, _a4, _a5, _a6, _a7) {
+        if (!(this instanceof TimezonedDate)) {
+            // When Date() is called without new, it ignores its arguments and
+            // returns same as new Date().toString()
+            if (bound) {
+                return new TimezonedDate().toString();
             }
-            this.setTime(buildDate(args, offset));
-            this.offset = function() {
-                return offset;
-            };
+            return new TimezonedDate(_a1).toString();
         }
+        var args = Array.prototype.slice.call(arguments);
+        var offset = bound ? boundOffset : args.pop();
+        if (!isOffset(offset)) {
+            throw new TypeError('TimezonedDate requires an offset');
+        }
+        var instance = new(Function.prototype.bind.apply(NativeDate, [null].concat(args)))();
+        Object.setPrototypeOf(instance, proto);
+        instance.setTime(buildDate(args, offset));
+        instance.offset = function() {
+            return offset;
+        };
+        return instance;
+    }
+
+    Object.setPrototypeOf(TimezonedDate, Date);
+
+    var constructorPropertyDescriptors = makeMethodDescriptors({
+        UTC: NativeDate.UTC,
+        parse: NativeDate.parse
+    });
+
+    constructorPropertyDescriptors.prototype = {
+        value: proto,
+        writable: false,
+        configurable: false
+    };
+
+    Object.defineProperties(TimezonedDate, constructorPropertyDescriptors);
+
+    var protoMethods = {
+        constructor: TimezonedDate,
 
         withOffset(offset) {
             return new ExportedTimezonedDate(this.getTime(), offset);
-        }
+        },
 
-        getTime() {
-            return this.date().getTime();
-        }
         getTimezoneOffset() {
             return -this.offset();
-        }
-        toISOString() {
-            if (typeof this.date !== 'function') {
-                // This method is probably applied to an original Date instance
-                return OriginalDate.prototype.toISOString.apply(this);
-            }
-            return this.date().toISOString();
-        }
-        valueOf() {
-            return this.getTime();
-        }
+        },
 
         toDateString() {
             if (isNaN(this.getDate())) {
@@ -60,7 +79,7 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
                 addZero(this.getDate()),
                 this.getFullYear()
             ].join(' ');
-        }
+        },
 
         toTimeString() {
             if (isNaN(this.getDate())) {
@@ -75,14 +94,14 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
                 ' ',
                 formatOffset(this.offset())
             ].join('');
-        }
+        },
 
         toString() {
             if (isNaN(this.getDate())) {
                 return 'Invalid date';
             }
             return this.toDateString() + ' ' + this.toTimeString();
-        }
+        },
 
         toUTCString() {
             if (isNaN(this.getDate())) {
@@ -105,71 +124,59 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
                 addZero(gmtDate.getSeconds()),
                 ' GMT'
             ].join('');
-        }
+        },
 
         getYear() {
             return getLocalDate(this).getUTCFullYear() - 1900;
-        }
+        },
 
         setYear(year) {
             return this.setFullYear(1900 + year);
-        }
-
-        setTime(date) {
-            this.date = function() {
-                return new OriginalDate(date);
-            };
-            return this;
-        }
+        },
 
         // https://nodejs.org/api/util.html#util_custom_inspect_function_on_objects
         inspect() {
             return this.toString();
-        }
-    }
+        },
 
-    const proto = TimezonedDate.prototype;
+        getTime: nativeProto.getTime,
+        setTime: nativeProto.setTime,
+        valueOf: nativeProto.valueOf,
+
+        toLocaleString: nativeProto.toLocaleString,
+        toLocaleDateString: nativeProto.toLocaleDateString,
+        toLocaleTimeString: nativeProto.toLocaleTimeString
+    };
 
     function addGetters(property) {
         const getterName = 'get' + property,
             utcGetterName = 'getUTC' + property;
-        Object.defineProperty(proto, getterName, {
-            value: createFunction(function() {
-                return getLocalDate(this)[utcGetterName]();
-            }, 0, getterName),
-            configurable: true,
-            writable: true
-        });
-        Object.defineProperty(proto, utcGetterName, {
-            value: createFunction(function() {
-                return this.date()[utcGetterName]();
-            }, 0, utcGetterName),
-            configurable: true,
-            writable: true
-        });
+        protoMethods[getterName] = createFunction(function() {
+            return getLocalDate(this)[utcGetterName]();
+        }, 0, getterName);
+        protoMethods[utcGetterName] = createFunction(function() {
+            return nativeProto[utcGetterName].apply(this, arguments);
+        }, 0, utcGetterName);
     }
 
     function addSetters(property, length = 1) {
         const setterName = 'set' + property,
             utcSetterName = 'setUTC' + property;
-        Object.defineProperty(proto, setterName, {
-            value: createFunction(function() {
-                var localDate = getLocalDate(this);
-                localDate[utcSetterName].apply(localDate, arguments);
-                return this.setTime(applyOffset(localDate, -this.offset()));
-            }, length, setterName),
-            configurable: true,
-            writable: true
-        });
-        Object.defineProperty(proto, utcSetterName, {
-            value: createFunction(function() {
-                var date = this.date();
-                date[utcSetterName].apply(date, arguments);
-                return this.setTime(date);
-            }, length, utcSetterName),
-            configurable: true,
-            writable: true
-        });
+        protoMethods[setterName] = createFunction(function() {
+            if (!(this instanceof TimezonedDate)) {
+                throw new TypeError();
+            }
+            var localDate = getLocalDate(this);
+            nativeProto[utcSetterName].apply(localDate, arguments);
+            return this.setTime(applyOffset(localDate, -this.offset()));
+        }, length, setterName);
+        protoMethods[utcSetterName] = createFunction(function() {
+            if (!(this instanceof TimezonedDate)) {
+                throw new TypeError();
+            }
+            nativeProto[utcSetterName].apply(this, arguments);
+            return this;
+        }, length, utcSetterName);
     }
 
     addGetters('Date');
@@ -188,53 +195,24 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
     addGetters('Seconds');
     addSetters('Seconds', 2);
 
-    Object.defineProperties(proto, {
-        [Symbol.toStringTag]: {
+    var prototypePropertyDescriptors = makeMethodDescriptors(protoMethods);
+
+    if (Symbol.toStringTag) {
+        // Node v6+ or a polyfill
+        prototypePropertyDescriptors[Symbol.toStringTag] = {
             value: 'Date'
-        },
-        [Symbol.toPrimitive]: {
-            value: OriginalDate.prototype[Symbol.toPrimitive],
+        };
+    }
+    if (Symbol.toPrimitive) {
+        prototypePropertyDescriptors[Symbol.toPrimitive] = {
+            value: nativeProto[Symbol.toPrimitive],
             configurable: true
-        }
-    });
-
-    const ownPropsOfProto = ['toLocaleString', 'toLocaleDateString', 'toLocaleTimeString'];
-    for (let prop of ownPropsOfProto) {
-        Object.defineProperty(proto, prop, {
-            value: OriginalDate.prototype[prop],
-            configurable: true,
-            writable: true
-        });
+        };
     }
 
-    var _TimezonedDate = function(_a1, _a2, _a3, _a4, _a5, _a6, _a7) {
-        if (!(this instanceof _TimezonedDate)) {
-            // When Date() is called without new, it ignores its arguments and
-            // returns same as new Date().toString()
-            if (bound) {
-                return new TimezonedDate().toString();
-            }
-            return new TimezonedDate(_a1).toString();
-        }
-        return new TimezonedDate(...arguments);
-    };
-    Object.defineProperty(_TimezonedDate, 'prototype', {
-        value: proto,
-        writable: false,
-        configurable: false
-    });
-    proto.constructor = _TimezonedDate;
-    Object.setPrototypeOf(_TimezonedDate, TimezonedDate);
-    const ownPropsOfCtor = ['UTC', 'parse'];
-    for (let prop of ownPropsOfCtor) {
-        Object.defineProperty(_TimezonedDate, prop, {
-            value: OriginalDate[prop],
-            configurable: true,
-            writable: true
-        });
-    }
+    Object.defineProperties(proto, prototypePropertyDescriptors);
 
-    return _TimezonedDate;
+    return TimezonedDate;
 }
 
 function isOffset(x) {
@@ -255,19 +233,19 @@ function applyOffset(date, offset) {
 // A Date whose "UTC time" is the local time of this object's real time.
 // That is, it is incorrect by `offset` minutes. Used for `getDate` et al.
 function getLocalDate(date) {
-    return applyOffset(date.date(), date.offset());
+    return applyOffset(new NativeDate(date), date.offset());
 }
 
 function buildDate(args, offset) {
     if (args.length === 0) {
-        return new OriginalDate();
+        return new NativeDate();
     }
 
-    if (args.length === 1 && args[0] instanceof OriginalDate) {
+    if (args.length === 1 && args[0] instanceof NativeDate) {
         return args[0];
     }
     if (args.length === 1 && (typeof args[0] === 'number' || typeof args[0] === 'boolean')) {
-        return new OriginalDate(args[0]);
+        return new NativeDate(args[0]);
     }
 
     if (args.length > 1) {
@@ -276,12 +254,12 @@ function buildDate(args, offset) {
         args[5] = args[5] || null;
         args[6] = args[6] || null;
 
-        date = new OriginalDate(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+        date = new NativeDate(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
         return applyOffset(date, -date.getTimezoneOffset() - offset);
     }
 
     var string = args[0].toString(),
-        date = new OriginalDate(string),
+        date = new NativeDate(string),
         isYYYYmmdd = /\d\d\d\d-\d\d-\d\d/.test(string),
         isOffsetSpecified = OFFSET_SUFFIX.test(string),
         isLocal = !isYYYYmmdd && !isOffsetSpecified;
@@ -301,6 +279,20 @@ function formatOffset(offsetInMinutes) {
     return 'GMT' + sign + addZero(hours) + addZero(minutes);
 }
 
+function makeMethodDescriptors(methods) {
+    var result = {};
+    for (var key in methods) {
+        if (methods.hasOwnProperty(key)) {
+            result[key] = {
+                value: methods[key],
+                writable: true,
+                configurable: true
+            };
+        }
+    }
+    return result;
+}
+
 function createFunction(fn, length, name) {
     var argNames = [];
     for (var i = 0; i < length; i++) {
@@ -315,4 +307,4 @@ function addZero(value) {
 
 var ExportedTimezonedDate = makeConstructor(false);
 ExportedTimezonedDate.makeConstructor = makeConstructor;
-export default ExportedTimezonedDate;
+module.exports = ExportedTimezonedDate;

@@ -5,7 +5,7 @@ var assert = require("assert"),
 
 describe('A bound constructor', function() {
 
-    it('is created with makeConstructor', function() {
+    it('should be created with makeConstructor', function() {
         var Date0 = TimezonedDate.makeConstructor(0);
         assert.ok(typeof Date0 === 'function');
     });
@@ -15,6 +15,23 @@ describe('A bound constructor', function() {
         assert.doesNotThrow(function() {
             new Date0();
         });
+    });
+
+    it('should create instances that are instanceof Date', function() {
+        var Date0 = TimezonedDate.makeConstructor(0);
+        var date0 = new Date0();
+        assert.ok(date0 instanceof Date0);
+        assert.ok(date0 instanceof Date);
+    });
+
+    it('should create correct instances for any day and hour without DST bugs', function() {
+        var Date0 = TimezonedDate.makeConstructor(0);
+        for (var day = 0; day < 366; day++) {
+            for (var h = 0; h < 24; h++) {
+                var instance = new Date0(2015, 0, day, h);
+                assert.equal(instance.getHours(), h, instance.toString());
+            }
+        }
     });
 
 });
