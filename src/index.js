@@ -50,19 +50,23 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
             return this.getTime();
         }
 
-        toString() {
+        toDateString() {
             if (isNaN(this.getDate())) {
                 return 'Invalid date';
             }
             return [
                 daysOfWeek[this.getDay()],
-                ' ',
                 months[this.getMonth()],
-                ' ',
                 addZero(this.getDate()),
-                ' ',
-                this.getFullYear(),
-                ' ',
+                this.getFullYear()
+            ].join(' ');
+        }
+
+        toTimeString() {
+            if (isNaN(this.getDate())) {
+                return 'Invalid date';
+            }
+            return [
                 addZero(this.getHours()),
                 ':',
                 addZero(this.getMinutes()),
@@ -71,6 +75,13 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
                 ' ',
                 formatOffset(this.offset())
             ].join('');
+        }
+
+        toString() {
+            if (isNaN(this.getDate())) {
+                return 'Invalid date';
+            }
+            return this.toDateString() + ' ' + this.toTimeString();
         }
 
         toUTCString() {
@@ -187,7 +198,7 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
         }
     });
 
-    const ownPropsOfProto = ['toTimeString', 'toLocaleString', 'toLocaleDateString', 'toDateString', 'toLocaleTimeString'];
+    const ownPropsOfProto = ['toLocaleString', 'toLocaleDateString', 'toLocaleTimeString'];
     for (let prop of ownPropsOfProto) {
         Object.defineProperty(proto, prop, {
             value: OriginalDate.prototype[prop],
@@ -241,7 +252,7 @@ function applyOffset(date, offset) {
     return date;
 }
 
-// A Date whose UTC time is the local time of this object's real time.
+// A Date whose "UTC time" is the local time of this object's real time.
 // That is, it is incorrect by `offset` minutes. Used for `getDate` et al.
 function getLocalDate(date) {
     return applyOffset(date.date(), date.offset());

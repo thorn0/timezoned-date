@@ -30,6 +30,20 @@ describe('DateWithOffset', function() {
     inChatham = new DateWithOffset(halfNoonUTC, chatham);
   });
 
+  describe('#toTimeString', function() {
+    it('returns a Time string in the correct offset', function() {
+      var expected = '01:15:00 GMT+1245';
+      assert.equal(inChatham.toTimeString(), expected);
+    });
+  });
+
+  describe('#toTimeString', function() {
+    it('returns a Date-only string in the correct offset', function() {
+      var expected = 'Thu Jan 01 2009';
+      assert.equal(inChatham.toDateString(), expected);
+    });
+  });
+
   describe('#toString', function() {
     it('returns a Date string in the correct offset', function() {
       var expected = 'Thu Jan 01 2009 01:15:00 GMT+1245';
