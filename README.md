@@ -25,7 +25,7 @@ May also be useful for tests and for server-side rendering with React.
 Known issues:
 
 * [daylight saving time support](https://github.com/jamesarosen/date-with-offset/pull/1).
-* Milliseconds are zeroed if you do `new Date(tzDate)` where `Date` is the original native `Date`, `tzDate` is an instance of `TimezonedDate`.
+* On Node 6, milliseconds are zeroed if you do `new Date(tzDate)` where `Date` is the original native `Date`, `tzDate` is an instance of `TimezonedDate`.
 
 *README TBD*
 

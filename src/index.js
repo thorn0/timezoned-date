@@ -1,22 +1,24 @@
 'use strict';
 
-var MILLISECONDS_PER_MINUTE = 60 * 1000,
+const MILLISECONDS_PER_MINUTE = 60 * 1000,
     OFFSET_SUFFIX = /(((GMT)?[\+\-]\d\d:?\d\d)|Z)(\s*\(.+\))?$/,
+    daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     OriginalDate = global.Date;
 
-function makeConstructor(defaultOffset = -new OriginalDate().getTimezoneOffset()) {
+function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) {
 
     // If the resulting constructor is "bound",
     //    - it's signature is compatible with built-in Date,
-    //    - objects it creates always have the same offset (defaultOffset).
+    //    - objects it creates always have the same offset (boundOffset).
     // If it's not,
     //    - it takes the offset as the last argument,
     //    - so it can create objects with different offsets.
-    var bound = isOffset(defaultOffset);
+    var bound = isOffset(boundOffset);
 
     class TimezonedDate extends OriginalDate {
         constructor(...args) {
-            var offset = bound ? defaultOffset : args.pop();
+            var offset = bound ? boundOffset : args.pop();
             super(...args);
             if (!isOffset(offset)) {
                 throw new TypeError('TimezonedDate requires an offset');
@@ -25,12 +27,6 @@ function makeConstructor(defaultOffset = -new OriginalDate().getTimezoneOffset()
             this.offset = function() {
                 return offset;
             };
-        }
-
-        // A Date whose UTC time is the local time of this object's real time.
-        // That is, it is incorrect by `offset` minutes. Used for `getDate` et al.
-        _localDate() {
-            return applyOffset(this.date(), this.offset());
         }
 
         withOffset(offset) {
@@ -44,6 +40,10 @@ function makeConstructor(defaultOffset = -new OriginalDate().getTimezoneOffset()
             return -this.offset();
         }
         toISOString() {
+            if (typeof this.date !== 'function') {
+                // This method is probably applied to an original Date instance
+                return OriginalDate.prototype.toISOString.apply(this);
+            }
             return this.date().toISOString();
         }
         valueOf() {
@@ -51,14 +51,30 @@ function makeConstructor(defaultOffset = -new OriginalDate().getTimezoneOffset()
         }
 
         toString() {
-            var localDate = this._localDate(),
-                plusBrowserOffset = applyOffset(localDate, localDate.getTimezoneOffset()),
-                asString = plusBrowserOffset.toString();
-            return asString.replace(OFFSET_SUFFIX, formattedOffset(this.offset()));
+            if (isNaN(this.getDate())) {
+                return 'Invalid date';
+            }
+            return [
+                daysOfWeek[this.getDay()],
+                ' ',
+                months[this.getMonth()],
+                ' ',
+                addZero(this.getDate()),
+                ' ',
+                this.getFullYear(),
+                ' ',
+                addZero(this.getHours()),
+                ':',
+                addZero(this.getMinutes()),
+                ':',
+                addZero(this.getSeconds()),
+                ' ',
+                formatOffset(this.offset())
+            ].join('');
         }
 
         getYear() {
-            return this._localDate().getUTCFullYear() - 1900;
+            return getLocalDate(this).getUTCFullYear() - 1900;
         }
 
         setYear(year) {
@@ -85,7 +101,7 @@ function makeConstructor(defaultOffset = -new OriginalDate().getTimezoneOffset()
             utcGetterName = 'getUTC' + property;
         Object.defineProperty(proto, getterName, {
             value: createFunction(function() {
-                return this._localDate()[utcGetterName]();
+                return getLocalDate(this)[utcGetterName]();
             }, 0, getterName),
             configurable: true,
             writable: true
@@ -104,7 +120,7 @@ function makeConstructor(defaultOffset = -new OriginalDate().getTimezoneOffset()
             utcSetterName = 'setUTC' + property;
         Object.defineProperty(proto, setterName, {
             value: createFunction(function() {
-                var localDate = this._localDate();
+                var localDate = getLocalDate(this);
                 localDate[utcSetterName].apply(localDate, arguments);
                 return this.setTime(applyOffset(localDate, -this.offset()));
             }, length, setterName),
@@ -202,6 +218,12 @@ function applyOffset(date, offset) {
     return date;
 }
 
+// A Date whose UTC time is the local time of this object's real time.
+// That is, it is incorrect by `offset` minutes. Used for `getDate` et al.
+function getLocalDate(date) {
+    return applyOffset(date.date(), date.offset());
+}
+
 function buildDate(args, offset) {
     if (args.length === 0) {
         return new OriginalDate();
@@ -237,18 +259,12 @@ function buildDate(args, offset) {
     return date;
 }
 
-function formattedOffset(offsetInMinutes) {
+function formatOffset(offsetInMinutes) {
     var sign = offsetInMinutes >= 0 ? '+' : '-';
     offsetInMinutes = Math.abs(offsetInMinutes);
     var hours = Math.floor(offsetInMinutes / 60),
         minutes = offsetInMinutes - 60 * hours;
-    if (hours < 10) {
-        hours = '0' + hours;
-    }
-    if (minutes < 10) {
-        minutes = '0' + minutes;
-    }
-    return 'GMT' + sign + hours + minutes;
+    return 'GMT' + sign + addZero(hours) + addZero(minutes);
 }
 
 function createFunction(fn, length, name) {
@@ -257,6 +273,10 @@ function createFunction(fn, length, name) {
         argNames.push('_a' + i);
     }
     return eval(`(function ${name}(${argNames.join(',')}) { return fn.apply(this, arguments); })`);
+}
+
+function addZero(value) {
+    return (value < 10 ? '0' : '') + value;
 }
 
 var ExportedTimezonedDate = makeConstructor(false);
