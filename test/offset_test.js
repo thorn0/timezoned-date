@@ -37,6 +37,13 @@ describe('DateWithOffset', function() {
     });
   });
 
+  describe('#toUTCString', function() {
+    it('returns a UTC Date string in the correct offset', function() {
+      var expected = 'Wed, Dec 31 2008 12:30:00 GMT';
+      assert.equal(inChatham.toUTCString(), expected);
+    });
+  });
+
   describe('#toJSON', function() {
     it('returns an ISO string in UTC', function() {
       var expected = halfNoonUTC.toJSON();

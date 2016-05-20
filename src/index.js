@@ -73,6 +73,29 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
             ].join('');
         }
 
+        toUTCString() {
+            if (isNaN(this.getDate())) {
+                return 'Invalid date';
+            }
+            var gmtDate = new ExportedTimezonedDate(+this, 0);
+            return [
+                daysOfWeek[gmtDate.getDay()],
+                ', ',
+                months[gmtDate.getMonth()],
+                ' ',
+                addZero(gmtDate.getDate()),
+                ' ',
+                gmtDate.getFullYear(),
+                ' ',
+                addZero(gmtDate.getHours()),
+                ':',
+                addZero(gmtDate.getMinutes()),
+                ':',
+                addZero(gmtDate.getSeconds()),
+                ' GMT'
+            ].join('');
+        }
+
         getYear() {
             return getLocalDate(this).getUTCFullYear() - 1900;
         }
@@ -164,7 +187,7 @@ function makeConstructor(boundOffset = -new OriginalDate().getTimezoneOffset()) 
         }
     });
 
-    const ownPropsOfProto = ['toTimeString', 'toLocaleString', 'toLocaleDateString', 'toDateString', 'toLocaleTimeString', 'toUTCString'];
+    const ownPropsOfProto = ['toTimeString', 'toLocaleString', 'toLocaleDateString', 'toDateString', 'toLocaleTimeString'];
     for (let prop of ownPropsOfProto) {
         Object.defineProperty(proto, prop, {
             value: OriginalDate.prototype[prop],
