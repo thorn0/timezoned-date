@@ -39,10 +39,16 @@ describe('TimezonedDate', function() {
         });
     });
 
-    describe('#toTimeString', function() {
+    describe('#toDateString', function() {
         it('returns a Date-only string in the correct offset', function() {
             var expected = 'Thu Jan 01 2009';
             assert.equal(inChatham.toDateString(), expected);
+        });
+        it('pads year with spaces', function() {
+            inChatham.setFullYear(10);
+            assert.equal(inChatham.toDateString(), 'Fri Jan 01   10');
+            inChatham.setFullYear(101);
+            assert.equal(inChatham.toDateString(), 'Sat Jan 01  101');
         });
     });
 
@@ -55,7 +61,7 @@ describe('TimezonedDate', function() {
 
     describe('#toUTCString', function() {
         it('returns a UTC Date string in the correct offset', function() {
-            var expected = 'Wed, Dec 31 2008 12:30:00 GMT';
+            var expected = 'Wed, 31 Dec 2008 12:30:00 GMT';
             assert.equal(inChatham.toUTCString(), expected);
         });
     });

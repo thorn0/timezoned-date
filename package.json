@@ -1,6 +1,6 @@
 {
   "name": "timezoned-date",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "license": "Apache-2.0",
   "description": "Work with timezone-aware dates",
   "keywords": [
@@ -24,7 +24,6 @@
   "devDependencies": {
     "babel-cli": "^6.5.2",
     "babel-eslint": "^6.0.4",
-    "babel-plugin-add-module-exports": "^0.2.1",
     "babel-preset-es2015": "^6.9.0",
     "eslint": "^2.10.2",
     "mocha": "~2.4.5",

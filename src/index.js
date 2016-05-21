@@ -2,6 +2,7 @@
 'use strict';
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000,
+    YYYY_MM_DD = /^\d\d\d\d(-\d\d){0,2}/,
     OFFSET_SUFFIX = /(((GMT)?[\+\-]\d\d:?\d\d)|Z)(\s*\(.+\))?$/,
     daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -36,10 +37,38 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
         }
         var instance = new(Function.prototype.bind.apply(NativeDate, [null].concat(args)))();
         Object.setPrototypeOf(instance, proto);
-        instance.setTime(buildDate(args, offset));
         instance.offset = function() {
             return offset;
         };
+
+        var inited = args.length === 0 ||
+            args.length === 1 && args[0] instanceof NativeDate ||
+            args.length === 1 && (typeof args[0] === 'number' || typeof args[0] === 'boolean') ||
+            args.length > 1 && isNaN(instance.getDate());
+
+        if (!inited && args.length > 1) {
+            instance.setFullYear(args[0]);
+            instance.setMonth(args[1]);
+            instance.setDate(args[2] || 1);
+            instance.setHours(args[3] || null);
+            instance.setMinutes(args[4] || null);
+            instance.setSeconds(args[5] || null);
+            instance.setMilliseconds(args[6] || null);
+            inited = true;
+        }
+
+        if (!inited) {
+            var string = args[0].toString(),
+                date = new NativeDate(string),
+                isYYYYmmdd = YYYY_MM_DD.test(string),
+                isOffsetSpecified = OFFSET_SUFFIX.test(string),
+                isLocal = !isYYYYmmdd && !isOffsetSpecified;
+            if (isLocal) {
+                applyOffset(date, -date.getTimezoneOffset() - offset);
+            }
+            instance.setTime(date);
+        }
+
         return instance;
     }
 
@@ -71,19 +100,19 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
 
         toDateString() {
             if (isNaN(this.getDate())) {
-                return 'Invalid date';
+                return 'Invalid Date';
             }
             return [
                 daysOfWeek[this.getDay()],
                 months[this.getMonth()],
                 addZero(this.getDate()),
-                this.getFullYear()
+                padYear(this.getFullYear())
             ].join(' ');
         },
 
         toTimeString() {
             if (isNaN(this.getDate())) {
-                return 'Invalid date';
+                return 'Invalid Date';
             }
             return [
                 addZero(this.getHours()),
@@ -98,30 +127,29 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
 
         toString() {
             if (isNaN(this.getDate())) {
-                return 'Invalid date';
+                return 'Invalid Date';
             }
             return this.toDateString() + ' ' + this.toTimeString();
         },
 
         toUTCString() {
             if (isNaN(this.getDate())) {
-                return 'Invalid date';
+                return 'Invalid Date';
             }
-            var gmtDate = new ExportedTimezonedDate(+this, 0);
             return [
-                daysOfWeek[gmtDate.getDay()],
+                daysOfWeek[this.getUTCDay()],
                 ', ',
-                months[gmtDate.getMonth()],
+                addZero(this.getUTCDate()),
                 ' ',
-                addZero(gmtDate.getDate()),
+                months[this.getUTCMonth()],
                 ' ',
-                gmtDate.getFullYear(),
+                this.getUTCFullYear(),
                 ' ',
-                addZero(gmtDate.getHours()),
+                addZero(this.getUTCHours()),
                 ':',
-                addZero(gmtDate.getMinutes()),
+                addZero(this.getUTCMinutes()),
                 ':',
-                addZero(gmtDate.getSeconds()),
+                addZero(this.getUTCSeconds()),
                 ' GMT'
             ].join('');
         },
@@ -153,13 +181,11 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
             utcGetterName = 'getUTC' + property;
         protoMethods[getterName] = createFunction(function() {
             return getLocalDate(this)[utcGetterName]();
-        }, 0, getterName);
-        protoMethods[utcGetterName] = createFunction(function() {
-            return nativeProto[utcGetterName].apply(this, arguments);
-        }, 0, utcGetterName);
+        }, nativeProto[getterName].length, getterName);
+        protoMethods[utcGetterName] = nativeProto[utcGetterName];
     }
 
-    function addSetters(property, length = 1) {
+    function addSetters(property) {
         const setterName = 'set' + property,
             utcSetterName = 'setUTC' + property;
         protoMethods[setterName] = createFunction(function() {
@@ -169,31 +195,25 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
             var localDate = getLocalDate(this);
             nativeProto[utcSetterName].apply(localDate, arguments);
             return this.setTime(applyOffset(localDate, -this.offset()));
-        }, length, setterName);
-        protoMethods[utcSetterName] = createFunction(function() {
-            if (!(this instanceof TimezonedDate)) {
-                throw new TypeError();
-            }
-            nativeProto[utcSetterName].apply(this, arguments);
-            return this;
-        }, length, utcSetterName);
+        }, nativeProto[setterName].length, setterName);
+        protoMethods[utcSetterName] = nativeProto[utcSetterName];
     }
 
     addGetters('Date');
     addSetters('Date');
     addGetters('Day'); // can't set day of week
     addGetters('FullYear');
-    addSetters('FullYear', 3);
+    addSetters('FullYear');
     addGetters('Hours');
-    addSetters('Hours', 4);
+    addSetters('Hours');
     addGetters('Milliseconds');
     addSetters('Milliseconds');
     addGetters('Minutes');
-    addSetters('Minutes', 3);
+    addSetters('Minutes');
     addGetters('Month');
-    addSetters('Month', 2);
+    addSetters('Month');
     addGetters('Seconds');
-    addSetters('Seconds', 2);
+    addSetters('Seconds');
 
     var prototypePropertyDescriptors = makeMethodDescriptors(protoMethods);
 
@@ -236,41 +256,6 @@ function getLocalDate(date) {
     return applyOffset(new NativeDate(date), date.offset());
 }
 
-function buildDate(args, offset) {
-    if (args.length === 0) {
-        return new NativeDate();
-    }
-
-    if (args.length === 1 && args[0] instanceof NativeDate) {
-        return args[0];
-    }
-    if (args.length === 1 && (typeof args[0] === 'number' || typeof args[0] === 'boolean')) {
-        return new NativeDate(args[0]);
-    }
-
-    if (args.length > 1) {
-        args[3] = args[3] || null;
-        args[4] = args[4] || null;
-        args[5] = args[5] || null;
-        args[6] = args[6] || null;
-
-        date = new NativeDate(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
-        return applyOffset(date, -date.getTimezoneOffset() - offset);
-    }
-
-    var string = args[0].toString(),
-        date = new NativeDate(string),
-        isYYYYmmdd = /\d\d\d\d-\d\d-\d\d/.test(string),
-        isOffsetSpecified = OFFSET_SUFFIX.test(string),
-        isLocal = !isYYYYmmdd && !isOffsetSpecified;
-
-    if (isLocal) {
-        date = applyOffset(date, -date.getTimezoneOffset() - offset);
-    }
-
-    return date;
-}
-
 function formatOffset(offsetInMinutes) {
     var sign = offsetInMinutes >= 0 ? '+' : '-';
     offsetInMinutes = Math.abs(offsetInMinutes);
@@ -303,6 +288,11 @@ function createFunction(fn, length, name) {
 
 function addZero(value) {
     return (value < 10 ? '0' : '') + value;
+}
+
+function padYear(year) {
+    var length = ('' + year).length;
+    return (length < 4 ? '   '.slice(0, 4 - length) : '') + year;
 }
 
 var ExportedTimezonedDate = makeConstructor(false);
