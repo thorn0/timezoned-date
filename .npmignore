@@ -7,3 +7,4 @@
 .npmignore
 /test262/
 .babelrc
+.travis.yml
