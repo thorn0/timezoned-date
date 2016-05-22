@@ -1,7 +1,8 @@
-/*jshint esversion: 6*/
+/*jshint esversion: 6, node: true*/
+/*global Symbol*/
 'use strict';
 
-const MILLISECONDS_PER_MINUTE = 60 * 1000,
+var MILLISECONDS_PER_MINUTE = 60 * 1000,
     YYYY_MM_DD = /^\d\d\d\d(-\d\d){0,2}/,
     OFFSET_SUFFIX = /(((GMT)?[\+\-]\d\d:?\d\d)|Z)(\s*\(.+\))?$/,
     daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
@@ -21,21 +22,22 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
 
     var proto = Object.create(nativeProto);
 
-    function TimezonedDate(_a1, _a2, _a3, _a4, _a5, _a6, _a7) {
-        if (!(this instanceof TimezonedDate)) {
+    var constructor = function Date(_a1, _a2, _a3, _a4, _a5, _a6, _a7) {
+        if (!(this instanceof constructor)) {
             // When Date() is called without new, it ignores its arguments and
             // returns same as new Date().toString()
             if (bound) {
-                return new TimezonedDate().toString();
+                return new constructor().toString();
             }
-            return new TimezonedDate(_a1).toString();
+            return new constructor(_a1).toString();
         }
         var args = Array.prototype.slice.call(arguments);
         var offset = bound ? boundOffset : args.pop();
         if (!isOffset(offset)) {
             throw new TypeError('TimezonedDate requires an offset');
         }
-        var instance = new(Function.prototype.bind.apply(NativeDate, [null].concat(args)))();
+        var boundNativeConstructor = Function.prototype.bind.apply(NativeDate, [null].concat(args));
+        var instance = new boundNativeConstructor();
         Object.setPrototypeOf(instance, proto);
         instance.offset = function() {
             return offset;
@@ -70,9 +72,9 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
         }
 
         return instance;
-    }
+    };
 
-    Object.setPrototypeOf(TimezonedDate, Date);
+    Object.setPrototypeOf(constructor, Date);
 
     var constructorPropertyDescriptors = makeMethodDescriptors({
         UTC: NativeDate.UTC,
@@ -85,13 +87,13 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
         configurable: false
     };
 
-    Object.defineProperties(TimezonedDate, constructorPropertyDescriptors);
+    Object.defineProperties(constructor, constructorPropertyDescriptors);
 
     var protoMethods = {
-        constructor: TimezonedDate,
+        constructor,
 
         withOffset(offset) {
-            return new ExportedTimezonedDate(this.getTime(), offset);
+            return new TimezonedDate(this.getTime(), offset);
         },
 
         getTimezoneOffset() {
@@ -177,7 +179,7 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
     };
 
     function addGetters(property) {
-        const getterName = 'get' + property,
+        var getterName = 'get' + property,
             utcGetterName = 'getUTC' + property;
         protoMethods[getterName] = createFunction(function() {
             return getLocalDate(this)[utcGetterName]();
@@ -186,10 +188,10 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
     }
 
     function addSetters(property) {
-        const setterName = 'set' + property,
+        var setterName = 'set' + property,
             utcSetterName = 'setUTC' + property;
         protoMethods[setterName] = createFunction(function() {
-            if (!(this instanceof TimezonedDate)) {
+            if (!(this instanceof constructor)) {
                 throw new TypeError();
             }
             var localDate = getLocalDate(this);
@@ -232,7 +234,7 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
 
     Object.defineProperties(proto, prototypePropertyDescriptors);
 
-    return TimezonedDate;
+    return constructor;
 }
 
 function isOffset(x) {
@@ -295,6 +297,6 @@ function padYear(year) {
     return (length < 4 ? '   '.slice(0, 4 - length) : '') + year;
 }
 
-var ExportedTimezonedDate = makeConstructor(false);
-ExportedTimezonedDate.makeConstructor = makeConstructor;
-module.exports = ExportedTimezonedDate;
+var TimezonedDate = makeConstructor(false);
+TimezonedDate.makeConstructor = makeConstructor;
+module.exports = TimezonedDate;
