@@ -1,4 +1,4 @@
-/*jshint esversion: 6, evil: true*/
+/*jshint esversion: 6, evil: true, -W103*/
 'use strict';
 
 var MILLISECONDS_PER_MINUTE = 60 * 1000,
@@ -10,10 +10,14 @@ var MILLISECONDS_PER_MINUTE = 60 * 1000,
     NativeDate = global.Date,
     nativeProto = NativeDate.prototype;
 
-function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
+function makeConstructor(boundOffset) {
+
+    if (boundOffset === undefined) {
+        boundOffset = -new NativeDate().getTimezoneOffset();
+    }
 
     // If the resulting constructor is "bound",
-    //    - it's signature is compatible with built-in Date,
+    //    - its signature is compatible with built-in Date,
     //    - objects it creates always have the same offset (boundOffset).
     // If it's not,
     //    - it takes the offset as the last argument,
@@ -94,7 +98,7 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
     Object.defineProperties(constructor, constructorPropertyDescriptors);
 
     var protoMethods = {
-        constructor,
+        constructor: constructor,
 
         withOffset(offset) {
             return new TimezonedDate(this.getTime(), offset);
@@ -207,7 +211,7 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
 
     addGetters('Date');
     addSetters('Date');
-    addGetters('Day'); // can't set day of week
+    addGetters('Day');
     addGetters('FullYear');
     addSetters('FullYear');
     addGetters('Hours');
@@ -306,7 +310,7 @@ function createFunction(fn, length, name) {
     for (var i = 0; i < length; i++) {
         argNames.push('_a' + i);
     }
-    return eval(`(function ${name}(${argNames.join(',')}) { return fn.apply(this, arguments); })`);
+    return eval('(function ' + name + '(' + argNames.join(',') + ') { return fn.apply(this, arguments); })');
 }
 
 function addZero(value) {
