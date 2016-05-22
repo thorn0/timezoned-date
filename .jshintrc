@@ -1,0 +1,8 @@
+{
+    "node": true,
+    "eqnull": true,
+    "unused": "vars",
+    "globals": {
+        "Symbol": false
+    }
+}

@@ -31,7 +31,7 @@
   },
   "scripts": {
     "lint": "eslint src --fix || true",
-    "test": "mocha",
+    "test": "mocha --timeout 5000",
     "pretest262": "find test262/test262 -maxdepth 0 || git clone https://github.com/tc39/test262.git test262/test262 --depth 1",
     "test262": "cat test262/prelude.prefix lib/index.js test262/prelude.suffix > test262/prelude.js && test262-harness --prelude test262/prelude.js \"test262/test262/test/built-ins/Date/**/*.js\"",
     "pretest262native": "npm run pretest262",

@@ -2,6 +2,7 @@
 /test/
 .gitignore
 .eslintrc
+.jshintrc
 .editorconfig
 .npmignore
 /test262/

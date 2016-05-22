@@ -1,86 +1,205 @@
 var assert = require("assert"),
     TimezonedDate = require('../');
 
-describe('new TimezonedDate', function() {
+describe('Constructor', function() {
 
     "use strict";
 
-    it('requires at least one argument', function() {
-        assert.throws(
-            function() {
-                new TimezonedDate();
-            },
-            TypeError
-        );
-    });
+    describe('if not bound', function() {
+        it('requires at least one argument', function() {
+            assert.throws(
+                function() {
+                    new TimezonedDate();
+                },
+                TypeError
+            );
+        });
 
-    it('requires an offset that can be converted to a Number', function() {
-        assert.throws(
-            function() {
-                new TimezonedDate('foo');
-            },
-            TypeError
-        );
-    });
+        it('requires an offset that can be converted to a Number', function() {
+            assert.throws(
+                function() {
+                    new TimezonedDate('foo');
+                },
+                TypeError
+            );
+        });
 
-    it('accepts a number offset', function() {
-        assert.doesNotThrow(function() {
-            new TimezonedDate(-400);
+        it('accepts a number offset', function() {
+            assert.doesNotThrow(function() {
+                new TimezonedDate(-400);
+            });
+        });
+
+        it('accepts an offset that responds to valueOf', function() {
+            var offset = {
+                valueOf: function() {
+                    return 240;
+                }
+            };
+            assert.doesNotThrow(function() {
+                new TimezonedDate(offset);
+            });
+        });
+
+        describe('and is called with', function() {
+            var instance;
+
+            describe('an offset only', function() {
+                it('returns current time in the given offset', function() {
+                    instance = new TimezonedDate(120);
+                    var diff = new Date() - instance;
+                    assert.ok(0 <= diff && diff < 5000);
+                });
+            });
+
+            describe('a Date and an offset', function() {
+                it('returns the same moment in time in the given offset', function() {
+                    var date = new Date("2008-11-22T12:00:00Z");
+                    instance = new TimezonedDate(date, 540);
+                    assert.equal(instance.getTime(), date.getTime());
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('a TimezonedDate and an offset', function() {
+                it('returns the same moment in time in the given offset', function() {
+                    var date = new TimezonedDate("2008-11-22T12:00:00Z", -90);
+                    instance = new TimezonedDate(date, 540);
+                    assert.equal(instance.getTime(), date.getTime());
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('a timestamp and an offset', function() {
+                it('returns the same moment in time in the given offset', function() {
+                    var timestamp = (new Date("2008-11-22T12:00:00Z")).getTime();
+                    instance = new TimezonedDate(timestamp, 540);
+                    assert.equal(instance.getTime(), timestamp);
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('a GMT date string and an offset', function() {
+                it('returns the same moment in time in the given offset', function() {
+                    var isoString = "2008-11-22T12:00:00.000Z";
+                    instance = new TimezonedDate(isoString, 540);
+                    assert.equal(instance.toISOString(), isoString);
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('a local date string and an offset', function() {
+                // This way to call the constructor has a bug and isn't really reliable
+                // because the string is parsed by the native Date as a local time value.
+                // If the local time zone observes DST, some time strings are invalid in it
+                // and some others are ambiguous.
+                // TBD: 1) to fix this by not using the native parser when possible, which
+                // isn't easy as the native Date understands a lot of different formats;
+                // 2) to write a good test for this
+                it('treats the time as local to the given offset', function() {
+                    instance = new TimezonedDate('Nov 22 2008 21:00:00', 540);
+                    assert.equal(instance.toISOString(), '2008-11-22T12:00:00.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('year, month, day, hours, minutes, and an offset', function() {
+                it('treats the time as local to the given offset', function() {
+                    instance = new TimezonedDate(2008, 10, 22, 21, 0, 540);
+                    assert.equal(instance.toISOString(), '2008-11-22T12:00:00.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            afterEach('instanceof check', function() {
+                assert.ok(instance instanceof TimezonedDate);
+                assert.ok(instance instanceof Date);
+                instance = null;
+            });
         });
     });
 
-    it('accepts an offset that responds to valueOf', function() {
-        var offset = {
-            valueOf: function() {
-                return 240;
-            }
-        };
-        assert.doesNotThrow(function() {
-            new TimezonedDate(offset);
+    describe('if is bound', function() {
+
+        it('should be created with makeConstructor', function() {
+            var Date0 = TimezonedDate.makeConstructor(0);
+            assert.ok(typeof Date0 === 'function');
+        });
+
+        describe('and is called with', function() {
+            var TzDate;
+            beforeEach(function() {
+                TzDate = TimezonedDate.makeConstructor(540);
+            });
+
+            var instance;
+
+            describe('no parameters', function() {
+                it('returns current time in the given offset', function() {
+                    instance = new TzDate();
+                    var diff = new Date() - instance;
+                    assert.ok(0 <= diff && diff < 5000);
+                });
+            });
+
+            describe('a Date', function() {
+                it('returns the same moment in time in the given offset', function() {
+                    var date = new Date("2008-11-22T12:00:00Z");
+                    instance = new TzDate(date);
+                    assert.equal(instance.getTime(), date.getTime());
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('a TimezonedDate', function() {
+                it('returns the same moment in time in the given offset', function() {
+                    var date = new TimezonedDate("2008-11-22T12:00:00Z", -90);
+                    instance = new TzDate(date);
+                    assert.equal(instance.getTime(), date.getTime());
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('a timestamp', function() {
+                it('returns the same moment in time in the given offset', function() {
+                    var timestamp = (new Date("2008-11-22T12:00:00Z")).getTime();
+                    instance = new TzDate(timestamp);
+                    assert.equal(instance.getTime(), timestamp);
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('a GMT date string', function() {
+                it('returns the same moment in time in the given offset', function() {
+                    var isoString = "2008-11-22T12:00:00.000Z";
+                    instance = new TzDate(isoString);
+                    assert.equal(instance.toISOString(), isoString);
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('a local date string', function() {
+                // It's buggy. See above.
+                it('treats the time as local to the given offset', function() {
+                    instance = new TzDate('Nov 22 2008 21:00:00');
+                    assert.equal(instance.toISOString(), '2008-11-22T12:00:00.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('year, month, day, hours, minutes', function() {
+                it('treats the time as local to the given offset', function() {
+                    instance = new TzDate(2008, 10, 22, 21, 0);
+                    assert.equal(instance.toISOString(), '2008-11-22T12:00:00.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            afterEach('instanceof check', function() {
+                assert.ok(instance instanceof TzDate);
+                assert.ok(instance instanceof Date);
+                instance = null;
+            });
         });
     });
-
-    describe('with a Date and an offset', function() {
-        it('returns the same moment in time in the given offset', function() {
-            var date = new Date("2008-11-22T12:00:00Z"),
-                inTokyo = new TimezonedDate(date, 540);
-            assert.equal(inTokyo.getTime(), date.getTime());
-            assert.equal(inTokyo.getHours(), 21);
-        });
-    });
-
-    describe('with a timestamp and an offset', function() {
-        it('returns the same moment in time in the given offset', function() {
-            var timestamp = (new Date("2008-11-22T12:00:00Z")).getTime(),
-                inTokyo = new TimezonedDate(timestamp, 540);
-            assert.equal(inTokyo.getTime(), timestamp);
-            assert.equal(inTokyo.getHours(), 21);
-        });
-    });
-
-    describe('with a GMT date string and an offset', function() {
-        it('returns the same moment in time in the given offset', function() {
-            var isoString = "2008-11-22T12:00:00.000Z",
-                inTokyo = new TimezonedDate(isoString, 540);
-            assert.equal(inTokyo.toISOString(), isoString);
-            assert.equal(inTokyo.getHours(), 21);
-        });
-    });
-
-    describe('with a local date string and an offset', function() {
-        it('treats the time as local to the given offset', function() {
-            var inTokyo = new TimezonedDate('Nov 22 2008 21:00:00', 540);
-            assert.equal(inTokyo.toISOString(), '2008-11-22T12:00:00.000Z');
-            assert.equal(inTokyo.getHours(), 21);
-        });
-    });
-
-    describe('with year, month, day, hours, minutes, and an offset', function() {
-        it('treats the time as local to the given offset', function() {
-            var inTokyo = new TimezonedDate(2008, 10, 22, 21, 0, 540);
-            assert.equal(inTokyo.toISOString(), '2008-11-22T12:00:00.000Z');
-            assert.equal(inTokyo.getHours(), 21);
-        });
-    });
-
 });

@@ -1,5 +1,4 @@
-/*jshint esversion: 6, node: true*/
-/*global Symbol*/
+/*jshint esversion: 6, evil: true*/
 'use strict';
 
 var MILLISECONDS_PER_MINUTE = 60 * 1000,
