@@ -3,7 +3,7 @@
 
 var MILLISECONDS_PER_MINUTE = 60 * 1000,
     // Such strings are parsed as UTC. See http://dygraphs.com/date-formats.html
-    YYYY_MM_DD = /^\d\d\d\d(-\d\d){0,2}$/,
+    UTC_YYYY_MM_DD = /^\d\d\d\d(-\d\d){0,2}($|T)/,
     OFFSET_SUFFIX = /(((GMT)?[\+\-]\d\d:?\d\d)|Z)(\s*\(.+\))?$/,
     daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -63,7 +63,7 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
         if (!inited) {
             var string = args[0].toString(),
                 date = new NativeDate(string),
-                isYYYYmmdd = YYYY_MM_DD.test(string),
+                isYYYYmmdd = UTC_YYYY_MM_DD.test(string),
                 isOffsetSpecified = OFFSET_SUFFIX.test(string),
                 isLocal = !isYYYYmmdd && !isOffsetSpecified;
             if (isLocal) {

@@ -112,6 +112,34 @@ describe('Constructor', function() {
                 });
             });
 
+            describe('a "YYYY-MM-DDT..." date/time string and an offset', function() {
+                it('returns an invalid date if the format is YYYY-MM-DDThh', function() {
+                    instance = new TimezonedDate('2008-11-22T12:13:14', 540);
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+                it('treats the time as UTC if the format is YYYY-MM-DDThh:mm', function() {
+                    instance = new TimezonedDate('2008-11-22T12:13', 540);
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:00.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+                it('treats the time as UTC if the format is YYYY-MM-DDThh:mm:ss', function() {
+                    instance = new TimezonedDate('2008-11-22T12:13:14', 540);
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+                it('treats the time as UTC if the format is YYYY-MM-DDThh:mm:ss.xxx', function() {
+                    instance = new TimezonedDate('2008-11-22T12:13:14.999', 540);
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.999Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+                it('treats the time as UTC if the format is YYYY-MM-DDThh:mm:ssZ', function() {
+                    instance = new TimezonedDate('2008-11-22T12:13:14Z', 540);
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+            });
+
             describe('year, month, day, hours, minutes, and an offset', function() {
                 it('treats the time as local to the given offset', function() {
                     instance = new TimezonedDate(2008, 10, 22, 21, 0, 540);
@@ -215,6 +243,34 @@ describe('Constructor', function() {
                     instance = new TzDate('2008-11-22');
                     assert.equal(instance.toISOString(), '2008-11-22T00:00:00.000Z');
                     assert.equal(instance.getHours(), 9);
+                });
+            });
+
+            describe('a "YYYY-MM-DDT..." date/time string', function() {
+                it('returns an invalid date if the format is YYYY-MM-DDThh', function() {
+                    instance = new TzDate('2008-11-22T12:13:14');
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+                it('treats the time as UTC if the format is YYYY-MM-DDThh:mm', function() {
+                    instance = new TzDate('2008-11-22T12:13');
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:00.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+                it('treats the time as UTC if the format is YYYY-MM-DDThh:mm:ss', function() {
+                    instance = new TzDate('2008-11-22T12:13:14');
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+                it('treats the time as UTC if the format is YYYY-MM-DDThh:mm:ss.xxx', function() {
+                    instance = new TzDate('2008-11-22T12:13:14.999');
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.999Z');
+                    assert.equal(instance.getHours(), 21);
+                });
+                it('treats the time as UTC if the format is YYYY-MM-DDThh:mm:ssZ', function() {
+                    instance = new TzDate('2008-11-22T12:13:14Z');
+                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
+                    assert.equal(instance.getHours(), 21);
                 });
             });
 
