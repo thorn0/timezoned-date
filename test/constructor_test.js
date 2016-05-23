@@ -163,8 +163,8 @@ describe('Constructor', function() {
             });
 
             afterEach('instanceof check', function() {
-                assert.ok(instance instanceof TimezonedDate);
-                assert.ok(instance instanceof Date);
+                assert.ok(instance instanceof TimezonedDate, 'expected it to be instanceof TimezonedDate');
+                assert.ok(instance instanceof Date, 'expected it to be instanceof Date');
                 instance = null;
             });
         });
@@ -297,8 +297,8 @@ describe('Constructor', function() {
             });
 
             afterEach('instanceof check', function() {
-                assert.ok(instance instanceof TzDate);
-                assert.ok(instance instanceof Date);
+                assert.ok(instance instanceof TzDate, 'expected it to be instanceof the bound constructor');
+                assert.ok(instance instanceof Date, 'expected it to be instanceof Date');
                 instance = null;
             });
         });

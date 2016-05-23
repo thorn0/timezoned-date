@@ -38,7 +38,7 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
         }
         var boundNativeConstructor = Function.prototype.bind.apply(NativeDate, [null].concat(args));
         var instance = new boundNativeConstructor();
-        Object.setPrototypeOf(instance, proto);
+        setPrototypeOf(instance, proto);
         instance.offset = function() {
             return offset;
         };
@@ -75,7 +75,7 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
         return instance;
     };
 
-    Object.setPrototypeOf(constructor, Date);
+    setPrototypeOf(constructor, Date);
 
     var constructorPropertyDescriptors = makeMethodDescriptors({
         UTC: NativeDate.UTC,
@@ -87,6 +87,9 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
         writable: false,
         configurable: false
     };
+
+    // The next line is needed for Node 0.10.x only
+    constructor.prototype = proto;
 
     Object.defineProperties(constructor, constructorPropertyDescriptors);
 
@@ -220,17 +223,19 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
 
     var prototypePropertyDescriptors = makeMethodDescriptors(protoMethods);
 
-    if (Symbol.toStringTag) {
-        // Node v6+ or a polyfill
-        prototypePropertyDescriptors[Symbol.toStringTag] = {
-            value: 'Date'
-        };
-    }
-    if (Symbol.toPrimitive) {
-        prototypePropertyDescriptors[Symbol.toPrimitive] = {
-            value: nativeProto[Symbol.toPrimitive],
-            configurable: true
-        };
+    if (typeof Symbol !== 'undefined' /* Node 0.10.x */ ) {
+        if (Symbol.toStringTag) {
+            // Node v6+ or a polyfill
+            prototypePropertyDescriptors[Symbol.toStringTag] = {
+                value: 'Date'
+            };
+        }
+        if (Symbol.toPrimitive) {
+            prototypePropertyDescriptors[Symbol.toPrimitive] = {
+                value: nativeProto[Symbol.toPrimitive],
+                configurable: true
+            };
+        }
     }
 
     Object.defineProperties(proto, prototypePropertyDescriptors);
@@ -271,6 +276,15 @@ function formatOffset(offset) {
         tzName = ' (UTC)';
     }
     return 'GMT' + sign + addZero(hours) + addZero(minutes) + tzName;
+}
+
+function setPrototypeOf(object, proto) {
+    if (typeof Object.setPrototypeOf === 'function') {
+        Object.setPrototypeOf(object, proto);
+    } else {
+        // Node 0.10.x
+        object.__proto__ = proto;
+    }
 }
 
 function makeMethodDescriptors(methods) {
