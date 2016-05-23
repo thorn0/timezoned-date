@@ -5,6 +5,10 @@ describe('DST bugs', function() {
 
     "use strict";
 
+    if (process.env.npm_config_quicktest) {
+        return;
+    }
+
     var constructors;
 
     beforeEach(function() {
