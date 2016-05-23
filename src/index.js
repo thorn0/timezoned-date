@@ -2,7 +2,8 @@
 'use strict';
 
 var MILLISECONDS_PER_MINUTE = 60 * 1000,
-    YYYY_MM_DD = /^\d\d\d\d(-\d\d){0,2}/,
+    // Such strings are parsed as UTC. See http://dygraphs.com/date-formats.html
+    YYYY_MM_DD = /^\d\d\d\d(-\d\d){0,2}$/,
     OFFSET_SUFFIX = /(((GMT)?[\+\-]\d\d:?\d\d)|Z)(\s*\(.+\))?$/,
     daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -42,7 +43,8 @@ function makeConstructor(boundOffset = -new NativeDate().getTimezoneOffset()) {
             return offset;
         };
 
-        var inited = args.length === 0 ||
+        var inited = args[0] === undefined ||
+            args[0] === null && args.length === 1 ||
             args.length === 1 && args[0] instanceof NativeDate ||
             args.length === 1 && (typeof args[0] === 'number' || typeof args[0] === 'boolean') ||
             args.length > 1 && isNaN(instance.getDate());
@@ -257,12 +259,18 @@ function getLocalDate(date) {
     return applyOffset(new NativeDate(date), date.offset());
 }
 
-function formatOffset(offsetInMinutes) {
-    var sign = offsetInMinutes >= 0 ? '+' : '-';
-    offsetInMinutes = Math.abs(offsetInMinutes);
-    var hours = Math.floor(offsetInMinutes / 60),
-        minutes = offsetInMinutes - 60 * hours;
-    return 'GMT' + sign + addZero(hours) + addZero(minutes);
+function formatOffset(offset) {
+    var sign = offset >= 0 ? '+' : '-',
+        absOffsetInMinutes = Math.abs(offset),
+        hours = Math.floor(absOffsetInMinutes / 60),
+        minutes = absOffsetInMinutes - 60 * hours,
+        tzName = '';
+    if (Object.prototype.hasOwnProperty.call(offset, 'toString')) {
+        tzName = ' (' + offset.toString() + ')';
+    } else if (+offset === 0) {
+        tzName = ' (UTC)';
+    }
+    return 'GMT' + sign + addZero(hours) + addZero(minutes) + tzName;
 }
 
 function makeMethodDescriptors(methods) {

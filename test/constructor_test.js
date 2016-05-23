@@ -103,11 +103,34 @@ describe('Constructor', function() {
                 });
             });
 
+            describe('a "YYYY-MM-DD" date string and an offset', function() {
+                // see http://dygraphs.com/date-formats.html
+                it('treats the time as midnight UTC', function() {
+                    instance = new TimezonedDate('2008-11-22', 540);
+                    assert.equal(instance.toISOString(), '2008-11-22T00:00:00.000Z');
+                    assert.equal(instance.getHours(), 9);
+                });
+            });
+
             describe('year, month, day, hours, minutes, and an offset', function() {
                 it('treats the time as local to the given offset', function() {
                     instance = new TimezonedDate(2008, 10, 22, 21, 0, 540);
                     assert.equal(instance.toISOString(), '2008-11-22T12:00:00.000Z');
                     assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('undefined and an offset', function() {
+                it('returns an invalid date', function() {
+                    instance = new TimezonedDate(undefined, 60);
+                    assert.equal(instance.toString(), 'Invalid Date');
+                });
+            });
+
+            describe('null and an offset', function() {
+                it('return treat null as 0 (the Unix epoch)', function() {
+                    instance = new TimezonedDate(null, 180);
+                    assert.equal(instance.toISOString(), '1970-01-01T00:00:00.000Z');
                 });
             });
 
@@ -187,11 +210,33 @@ describe('Constructor', function() {
                 });
             });
 
+            describe('a "YYYY-MM-DD" date string', function() {
+                it('treats the time as midnight UTC', function() {
+                    instance = new TzDate('2008-11-22');
+                    assert.equal(instance.toISOString(), '2008-11-22T00:00:00.000Z');
+                    assert.equal(instance.getHours(), 9);
+                });
+            });
+
             describe('year, month, day, hours, minutes', function() {
                 it('treats the time as local to the given offset', function() {
                     instance = new TzDate(2008, 10, 22, 21, 0);
                     assert.equal(instance.toISOString(), '2008-11-22T12:00:00.000Z');
                     assert.equal(instance.getHours(), 21);
+                });
+            });
+
+            describe('undefined', function() {
+                it('returns an invalid date', function() {
+                    instance = new TzDate(undefined);
+                    assert.equal(instance.toString(), 'Invalid Date');
+                });
+            });
+
+            describe('null', function() {
+                it('return treat null as 0 (the Unix epoch)', function() {
+                    instance = new TzDate(null);
+                    assert.equal(instance.toISOString(), '1970-01-01T00:00:00.000Z');
                 });
             });
 

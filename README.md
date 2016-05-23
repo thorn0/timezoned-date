@@ -22,6 +22,8 @@ jsdom.env({
 
 May also be useful for tests and for server-side rendering with React.
 
+[![Build Status](https://travis-ci.org/thorn0/timezoned-date.svg?branch=master)](https://travis-ci.org/thorn0/timezoned-date)
+
 Known issues:
 
 * [daylight saving time support](https://github.com/jamesarosen/date-with-offset/pull/1).

@@ -20,7 +20,7 @@ describe('TimezonedDate', function() {
     var halfNoonUTC = new Date("2008-12-31T12:30Z"),
         chatham = {
             toString: function() {
-                return 'Chatham (+12:45)';
+                return 'Chatham';
             },
             valueOf: function() {
                 return 765;
@@ -33,14 +33,14 @@ describe('TimezonedDate', function() {
     });
 
     describe('#toTimeString', function() {
-        it('returns a Time string in the correct offset', function() {
-            var expected = '01:15:00 GMT+1245';
+        it('returns a time string in the correct offset', function() {
+            var expected = '01:15:00 GMT+1245 (Chatham)';
             assert.equal(inChatham.toTimeString(), expected);
         });
     });
 
     describe('#toDateString', function() {
-        it('returns a Date-only string in the correct offset', function() {
+        it('returns a date-only string in the correct offset', function() {
             var expected = 'Thu Jan 01 2009';
             assert.equal(inChatham.toDateString(), expected);
         });
@@ -53,8 +53,8 @@ describe('TimezonedDate', function() {
     });
 
     describe('#toString', function() {
-        it('returns a Date string in the correct offset', function() {
-            var expected = 'Thu Jan 01 2009 01:15:00 GMT+1245';
+        it('returns a date and time string in the correct offset', function() {
+            var expected = 'Thu Jan 01 2009 01:15:00 GMT+1245 (Chatham)';
             assert.equal(inChatham.toString(), expected);
         });
     });
