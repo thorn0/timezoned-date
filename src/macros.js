@@ -52,7 +52,7 @@ macro addSetters {
         var setterArgs = [];
         var setterLength = Date.prototype['set' + property].length;
         for (var i = 0; i < setterLength; i++) {
-            setterArgs.push(makeIdent('_a' + i, #{ $property }));
+            setterArgs.push(makeIdent('a' + i, #{ $property }));
         }
         letstx $setterArgs = setterArgs;
         return #{

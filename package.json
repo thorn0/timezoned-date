@@ -1,6 +1,6 @@
 {
   "name": "timezoned-date",
-  "version": "2.0.16",
+  "version": "2.0.17",
   "license": "Apache-2.0",
   "description": "Work with timezone-aware dates",
   "keywords": [
@@ -40,7 +40,7 @@
     "pretest262native": "npm run pretest262",
     "test262native": "test262-harness \"test262/test262/test/built-ins/Date/**/*.js\"",
     "prepublish": "npm run build && npm test",
-    "build": "mkdir lib & sjs -r -m ./src/macros.js src/index.js > ./lib/index.js && babel lib/index.js --out-file lib/index.js",
+    "build": "mkdir lib 2>nul & sjs -r -m ./src/macros.js src/index.js > ./lib/index.js && babel lib/index.js --out-file lib/index.js",
     "watch": "babel src/index.js --out-dir lib --watch"
   }
 }

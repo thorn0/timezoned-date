@@ -48,7 +48,7 @@ describe('Constructor', function() {
                 it('returns current time in the given offset', function() {
                     instance = new TimezonedDate(120);
                     var diff = new Date() - instance;
-                    assert.ok(0 <= diff && diff < 5000);
+                    assert.ok(0 <= diff && diff < 5000, 'Difference with the current time:' + diff);
                 });
             });
 
@@ -86,16 +86,22 @@ describe('Constructor', function() {
                     assert.equal(instance.toISOString(), isoString);
                     assert.equal(instance.getHours(), 21);
                 });
+                it('uses valueOf if the parameter is an object which has both valueOf and toString', function() {
+                    var isoString = "2008-11-22T12:00:00.000Z";
+                    instance = new TimezonedDate({
+                        valueOf: function() {
+                            return isoString;
+                        },
+                        toString: function() {
+                            return 'foo bar';
+                        }
+                    }, 540);
+                    assert.equal(instance.toISOString(), isoString);
+                    assert.equal(instance.getHours(), 21);
+                });
             });
 
             describe('a local date string and an offset', function() {
-                // This way to call the constructor has a bug and isn't really reliable
-                // because the string is parsed by the native Date as a local time value.
-                // If the local time zone observes DST, some time strings are invalid in it
-                // and some others are ambiguous.
-                // TBD: 1) to fix this by not using the native parser when possible, which
-                // isn't easy as the native Date understands a lot of different formats;
-                // 2) to write a good test for this
                 it('treats the time as local to the given offset', function() {
                     instance = new TimezonedDate('Nov 22 2008 21:00:00', 540);
                     assert.equal(instance.toISOString(), '2008-11-22T12:00:00.000Z');
@@ -227,10 +233,22 @@ describe('Constructor', function() {
                     assert.equal(instance.toISOString(), isoString);
                     assert.equal(instance.getHours(), 21);
                 });
+                it('uses valueOf if the parameter is an object which has both valueOf and toString', function() {
+                    var isoString = "2008-11-22T12:00:00.000Z";
+                    instance = new TzDate({
+                        valueOf: function() {
+                            return isoString;
+                        },
+                        toString: function() {
+                            return 'foo bar';
+                        }
+                    });
+                    assert.equal(instance.toISOString(), isoString);
+                    assert.equal(instance.getHours(), 21);
+                });
             });
 
             describe('a local date string', function() {
-                // It's buggy. See above.
                 it('treats the time as local to the given offset', function() {
                     instance = new TzDate('Nov 22 2008 21:00:00');
                     assert.equal(instance.toISOString(), '2008-11-22T12:00:00.000Z');

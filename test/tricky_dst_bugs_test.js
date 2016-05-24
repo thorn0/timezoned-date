@@ -21,7 +21,7 @@ describe('DST bugs', function() {
     });
 
     it('should not happen on creating instances for any day and hour', function() {
-        for (var day = 0; day < 366; day++) {
+        for (var day = 0; day <= 366; day++) {
             for (var h = 0; h < 24; h++) {
                 for (var i = 0; i < constructors.length; i++) {
                     var instance = new constructors[i](2016, 0, day, h);
@@ -31,8 +31,28 @@ describe('DST bugs', function() {
         }
     });
 
+    it('should not happen on creating instances from a string for any day and hour', function() {
+        for (var day = 0; day <= 366; day++) {
+            for (var h = 0; h < 24; h++) {
+                for (var i = 0; i < constructors.length; i++) {
+                    var date = new Date(2016, 0, day);
+                    var str = '2016/' + (date.getMonth() + 1) + '/' + date.getDate() + ' ' + h + ':00:00';
+                    var instance = new constructors[i](str);
+                    assert.equal(instance.getHours(), h, str);
+                    str = '2016/' + addZero(date.getMonth() + 1) + '/' + addZero(date.getDate()) + ' ' + h + ':00:59';
+                    instance = new constructors[i](str);
+                    assert.equal(instance.getHours(), h, str);
+                }
+            }
+        }
+
+        function addZero(value) {
+            return (value < 10 ? '0' : '') + value;
+        }
+    });
+
     it('should not happen with setHours', function() {
-        for (var day = 0; day < 366; day++) {
+        for (var day = 0; day <= 366; day++) {
             for (var h = 0; h < 24; h++) {
                 for (var i = 0; i < constructors.length; i++) {
                     var instance = new constructors[i](2015, 0, day);

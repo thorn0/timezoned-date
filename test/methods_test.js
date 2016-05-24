@@ -4,7 +4,7 @@ var assert = require("assert"),
 function assertSameInstant(actual, expected) {
     "use strict";
 
-    actual = new Date(+actual);
+    actual = new Date(actual);
     expected = new Date(expected);
 
     assert.equal(+actual, +expected,

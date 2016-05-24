@@ -26,54 +26,72 @@ function makeConstructor(boundOffset) {
 
     var proto = Object.create(nativeProto);
 
-    var constructor = function Date(_a1, _a2, _a3, _a4, _a5, _a6, _a7) {
+    var constructor = function Date(a0, a1, a2, a3, a4, a5, a6) {
         if (!(this instanceof constructor)) {
             // When Date() is called without new, it ignores its arguments and
             // returns same as new Date().toString()
             if (bound) {
                 return new constructor().toString();
             }
-            return new constructor(_a1).toString();
+            return new constructor(a0).toString();
         }
+
         var args = Array.prototype.slice.call(arguments);
         var offset = bound ? boundOffset : args.pop();
+        var len = args.length;
+
         if (!isOffset(offset)) {
             throw new TypeError('TimezonedDate requires an offset');
         }
-        var boundNativeConstructor = Function.prototype.bind.apply(NativeDate, [null].concat(args));
-        var instance = new boundNativeConstructor();
+
+        var instance =
+            len === 0 ? new NativeDate() :
+            len === 1 ? new NativeDate(a0) :
+            len === 2 ? new NativeDate(a0, a1) :
+            len === 3 ? new NativeDate(a0, a1, a2) :
+            len === 4 ? new NativeDate(a0, a1, a2, a3) :
+            len === 5 ? new NativeDate(a0, a1, a2, a3, a4) :
+            len === 6 ? new NativeDate(a0, a1, a2, a3, a4, a5) :
+            new NativeDate(a0, a1, a2, a3, a4, a5, a6);
+
         setPrototypeOf(instance, proto);
-        instance.offset = function() {
-            return offset;
-        };
-
-        var inited = args[0] === undefined ||
-            args[0] === null && args.length === 1 ||
-            args.length === 1 && args[0] instanceof NativeDate ||
-            args.length === 1 && (typeof args[0] === 'number' || typeof args[0] === 'boolean') ||
-            args.length > 1 && isNaN(instance.getDate());
-
-        if (!inited && args.length > 1) {
-            instance.setFullYear(args[0]);
-            instance.setMonth(args[1]);
-            instance.setDate(args[2] || 1);
-            instance.setHours(args[3] || null);
-            instance.setMinutes(args[4] || null);
-            instance.setSeconds(args[5] || null);
-            instance.setMilliseconds(args[6] || null);
-            inited = true;
+        if (!bound) {
+            instance.offset = function() {
+                return offset;
+            };
         }
 
-        if (!inited) {
-            var string = args[0].toString(),
-                date = new NativeDate(string),
-                isYYYYmmdd = UTC_YYYY_MM_DD.test(string),
-                isOffsetSpecified = OFFSET_SUFFIX.test(string),
-                isLocal = !isYYYYmmdd && !isOffsetSpecified;
+        var done = len === 0 ||
+            len === 1 && (a0 == null || a0 instanceof NativeDate || typeof a0 === 'number' || typeof a0 === 'boolean') ||
+            isNaN(instance.getDate());
+
+        if (!done && len > 1) {
+            instance.setTime(NativeDate.UTC.apply(NativeDate, args) - MILLISECONDS_PER_MINUTE * offset);
+            done = true;
+        }
+
+        if (!done && typeof a0 !== 'string') {
+            // According to the ES specification, a0 should be converted to a string or a number
+            // using quite a complicated algorithm.
+            //  ES5: http://www.ecma-international.org/ecma-262/5.1/#sec-15.9.3
+            //  ES6: http://www.ecma-international.org/ecma-262/6.0/#sec-date-value
+            // Let's try to avoid reimplementing this algorithm in JS. We'll call the native constructor
+            // with the argument explicitly converted to a string and compare the results.
+            done = new NativeDate('' + a0).getTime() !== instance.getTime();
+            // If a0 is converted to a number, we're done. Otherwise further actions might be needed.
+        }
+
+        if (!done) {
+            var string = '' + a0,
+                isLocal = !UTC_YYYY_MM_DD.test(string) && !OFFSET_SUFFIX.test(string);
             if (isLocal) {
-                applyOffset(date, -date.getTimezoneOffset() - offset);
+                var date = new NativeDate(string + ' ' + formatOffset(offset));
+                if (!isNaN(date.getTime())) {
+                    instance.setTime(date);
+                } else {
+                    applyOffset(instance, -nativeProto.getTimezoneOffset.apply(instance) - offset);
+                }
             }
-            instance.setTime(date);
         }
 
         return instance;
@@ -100,6 +118,9 @@ function makeConstructor(boundOffset) {
     var protoMethods = {
         constructor: constructor,
 
+        offset() {
+            return boundOffset;
+        },
         withOffset(offset) {
             return new TimezonedDate(this.getTime(), offset);
         },

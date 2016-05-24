@@ -27,7 +27,7 @@ May also be useful for tests and for server-side rendering with React.
 Known issues:
 
 * [daylight saving time support](https://github.com/jamesarosen/date-with-offset/pull/1).
-* On Node 6, milliseconds are zeroed if you do `new Date(tzDate)` where `Date` is the original native `Date`, `tzDate` is an instance of `TimezonedDate`.
+* `Date.parse` isn't implemented.
 
 *README TBD*
 
@@ -137,7 +137,7 @@ newYearsInBoston.setDate(15);
 newYearsInBoston;                     // Tue Jan 15 2013 00:00:00 GMT-0500
 ```
 
-## Additional Features
+## Additional Methods
 
 Get back the original offset:
 
@@ -154,12 +154,6 @@ different UTC offset:
 
 ```
 var nowInChicago = nowInBoston.withOffset(-300)
-```
-
-Get a plain `Date` representing the same point in time at the local offset:
-
-```
-var nowInLocal = nowInParis.date();
 ```
 
 ## Related Projects
