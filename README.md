@@ -27,7 +27,6 @@ May also be useful for tests and for server-side rendering with React.
 Known issues:
 
 * [daylight saving time support](https://github.com/jamesarosen/date-with-offset/pull/1).
-* `Date.parse` isn't implemented.
 
 *README TBD*
 

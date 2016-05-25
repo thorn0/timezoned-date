@@ -73,7 +73,7 @@ function makeConstructor(boundOffset) {
         if (!done && typeof a0 !== 'string') {
             // According to the ES specification, a0 should be converted to a string or a number
             // using quite a complicated algorithm.
-            //  ES5: http://www.ecma-international.org/ecma-262/5.1/#sec-15.9.3
+            //  ES5: http://www.ecma-international.org/ecma-262/5.1/#sec-15.9.3.2
             //  ES6: http://www.ecma-international.org/ecma-262/6.0/#sec-date-value
             // Let's try to avoid reimplementing this algorithm in JS. We'll call the native constructor
             // with the argument explicitly converted to a string and compare the results.
@@ -101,7 +101,9 @@ function makeConstructor(boundOffset) {
 
     var constructorPropertyDescriptors = makeMethodDescriptors({
         UTC: NativeDate.UTC,
-        parse: NativeDate.parse
+        parse: bound ? function parse(string) {
+            return new constructor(String(string)).getTime();
+        } : NativeDate.parse
     });
 
     constructorPropertyDescriptors.prototype = {

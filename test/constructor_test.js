@@ -183,6 +183,21 @@ describe('Constructor', function() {
             assert.ok(typeof Date0 === 'function');
         });
 
+        it('.parse(string) method', function() {
+            var DateUTC = TimezonedDate.makeConstructor(0);
+            var values = {
+                '2013-12-11': '2013-12-11',
+                '2013-12-11T22:00': '2013-12-11T22:00',
+                'May 12 2016': '2016-05-12',
+                '12 May 2016': '2016-05-12',
+                'April 25 1986 23:23': '1986-04-25T23:23:00Z',
+                'April 26 1986 01:23 GMT+0200': '1986-04-25T23:23:00Z'
+            };
+            Object.keys(values).forEach(function(value) {
+                assert.equal(DateUTC.parse(value), Date.parse(values[value]), value);
+            });
+        });
+
         describe('and is called with', function() {
             var TzDate;
             beforeEach(function() {
