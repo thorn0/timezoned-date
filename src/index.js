@@ -165,28 +165,6 @@ function makeConstructor(boundOffset) {
             return this.toDateString() + ' ' + this.toTimeString();
         },
 
-        toUTCString() {
-            if (isNaN(this.getDate())) {
-                return 'Invalid Date';
-            }
-            return [
-                daysOfWeek[this.getUTCDay()],
-                ', ',
-                addZero(this.getUTCDate()),
-                ' ',
-                months[this.getUTCMonth()],
-                ' ',
-                this.getUTCFullYear(),
-                ' ',
-                addZero(this.getUTCHours()),
-                ':',
-                addZero(this.getUTCMinutes()),
-                ':',
-                addZero(this.getUTCSeconds()),
-                ' GMT'
-            ].join('');
-        },
-
         getYear() {
             return getLocalDate(this).getUTCFullYear() - 1900;
         },
@@ -195,15 +173,12 @@ function makeConstructor(boundOffset) {
             return this.setFullYear(1900 + year);
         },
 
-        // https://nodejs.org/api/util.html#util_custom_inspect_function_on_objects
-        inspect() {
-            return this.toString();
-        },
-
         getTime: nativeProto.getTime,
         setTime: nativeProto.setTime,
         valueOf: nativeProto.valueOf,
 
+        toUTCString: nativeProto.toUTCString,
+        toGMTString: nativeProto.toGMTString || nativeProto.toUTCString,
         toLocaleString: nativeProto.toLocaleString,
         toLocaleDateString: nativeProto.toLocaleDateString,
         toLocaleTimeString: nativeProto.toLocaleTimeString
