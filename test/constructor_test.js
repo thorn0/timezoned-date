@@ -118,11 +118,15 @@ describe('Constructor', function() {
                 });
             });
 
+            // See http://www.ecma-international.org/ecma-262/5.1/#sec-15.9.1.15
+            // As per the spec, the value of an absent time zone offset is "Z" (UTC).
+            // However, node-chakracore and IE treat the time as local in this case.
+            // So these tests fail there.
             describe('a "YYYY-MM-DDT..." date/time string and an offset', function() {
                 it('returns an invalid date if the format is YYYY-MM-DDThh', function() {
-                    instance = new TimezonedDate('2008-11-22T12:13:14', 540);
-                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
-                    assert.equal(instance.getHours(), 21);
+                    // That's what Node/V8 does, but it's not correct.
+                    instance = new TimezonedDate('2008-11-22T12', 540);
+                    assert.equal(instance.toString(), 'Invalid Date');
                 });
                 it('treats the time as UTC if the format is YYYY-MM-DDThh:mm', function() {
                     instance = new TimezonedDate('2008-11-22T12:13', 540);
@@ -185,16 +189,27 @@ describe('Constructor', function() {
 
         it('.parse(string) method', function() {
             var DateUTC = TimezonedDate.makeConstructor(0);
-            var values = {
-                '2013-12-11': '2013-12-11',
-                '2013-12-11T22:00': '2013-12-11T22:00',
-                'May 12 2016': '2016-05-12',
-                '12 May 2016': '2016-05-12',
-                'April 25 1986 23:23': '1986-04-25T23:23:00Z',
-                'April 26 1986 01:23 GMT+0200': '1986-04-25T23:23:00Z'
-            };
-            Object.keys(values).forEach(function(value) {
-                assert.equal(DateUTC.parse(value), Date.parse(values[value]), value);
+            var values = [
+                ['2013-12-11', '2013-12-11'],
+                ['2013-12-11T22:00', '2013-12-11T22:00'],
+                ['May 12 2016', '2016-05-12'],
+                ['12 May 2016', '2016-05-12'],
+                ['April 25 1986 23:23', '1986-04-25T23:23:00Z'],
+                ['April 26 1986 01:23 GMT+0200', '1986-04-25T23:23:00Z'],
+                [{
+                    toString: function() {
+                        return '2013-12-11';
+                    },
+                    valueOf: function() {
+                        return '2017-12-11';
+                    }
+                }, '2013-12-11'],
+                [new Date('2015-04-03T12:12:12.122Z'), '2015-04-03T12:12:12.000Z'],
+                [new DateUTC('2015-04-03T12:12:12.122Z'), '2015-04-03T12:12:12.000Z']
+            ];
+            values.forEach(function(pair, number) {
+                var errorMsg = 'value #' + (number + 1) + ' of ' + values.length + ': ' + String(pair[0]);
+                assert.equal(DateUTC.parse(pair[0]), Date.parse(pair[1]), errorMsg);
             });
         });
 
@@ -281,9 +296,8 @@ describe('Constructor', function() {
 
             describe('a "YYYY-MM-DDT..." date/time string', function() {
                 it('returns an invalid date if the format is YYYY-MM-DDThh', function() {
-                    instance = new TzDate('2008-11-22T12:13:14');
-                    assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
-                    assert.equal(instance.getHours(), 21);
+                    instance = new TzDate('2008-11-22T12');
+                    assert.equal(instance.toString(), 'Invalid Date');
                 });
                 it('treats the time as UTC if the format is YYYY-MM-DDThh:mm', function() {
                     instance = new TzDate('2008-11-22T12:13');
