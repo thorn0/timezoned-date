@@ -16,7 +16,6 @@ macro addGetters {
     case { _($property: lit); } => {
         // breaking hygiene
         letstx $nativeProto = [makeIdent("nativeProto", #{ $property })];
-        letstx $constructor = [makeIdent("constructor", #{ $property })];
         letstx $protoMethods = [makeIdent("protoMethods", #{ $property })];
         letstx $getLocalDate = [makeIdent("getLocalDate", #{ $property })];
 
@@ -40,7 +39,6 @@ macro addSetters {
     case { _($property: lit); } => {
         // breaking hygiene
         letstx $nativeProto = [makeIdent("nativeProto", #{ $property })];
-        letstx $constructor = [makeIdent("constructor", #{ $property })];
         letstx $protoMethods = [makeIdent("protoMethods", #{ $property })];
         letstx $getLocalDate = [makeIdent("getLocalDate", #{ $property })];
         letstx $applyOffset = [makeIdent("applyOffset", #{ $property })];
@@ -58,9 +56,6 @@ macro addSetters {
         return #{
 
             $protoMethods.$setterIdent = function $setterIdent($setterArgs) {
-                if (!(this instanceof $constructor)) {
-                    throw new TypeError();
-                }
                 var localDate = $getLocalDate(this);
                 $nativeProto.$utcSetterIdent.apply(localDate, arguments);
                 return this.setTime($applyOffset(localDate, -this.offset()));

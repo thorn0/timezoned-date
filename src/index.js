@@ -36,13 +36,18 @@ function makeConstructor(boundOffset) {
             return new constructor(a0).toString();
         }
 
-        var args = Array.prototype.slice.call(arguments);
-        var offset = bound ? boundOffset : args.pop();
-        var len = args.length;
-
-        if (!isOffset(offset)) {
-            throw new TypeError('TimezonedDate requires an offset');
+        var args, offset, len;
+        if (bound) {
+            args = arguments;
+            offset = boundOffset;
+        } else {
+            args = Array.prototype.slice.call(arguments);
+            offset = args.pop();
+            if (!isOffset(offset)) {
+                throw new TypeError('TimezonedDate requires an offset');
+            }
         }
+        len = args.length;
 
         var instance =
             len === 0 ? new NativeDate() :
@@ -197,9 +202,6 @@ function makeConstructor(boundOffset) {
         var setterName = 'set' + property,
             utcSetterName = 'setUTC' + property;
         protoMethods[setterName] = createFunction(function() {
-            if (!(this instanceof constructor)) {
-                throw new TypeError();
-            }
             var localDate = getLocalDate(this);
             nativeProto[utcSetterName].apply(localDate, arguments);
             return this.setTime(applyOffset(localDate, -this.offset()));
@@ -263,7 +265,7 @@ function applyOffset(date, offset) {
 // A Date whose "UTC time" is the local time of this object's real time.
 // That is, it is incorrect by `offset` minutes. Used for `getDate` et al.
 function getLocalDate(date) {
-    return applyOffset(new NativeDate(date), date.offset());
+    return new NativeDate(date.getTime() + MILLISECONDS_PER_MINUTE * date.offset());
 }
 
 function formatOffset(offset) {
