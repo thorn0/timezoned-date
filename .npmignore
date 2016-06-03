@@ -8,3 +8,4 @@
 /test262/
 .babelrc
 .travis.yml
+*.log

@@ -1,6 +1,6 @@
 {
   "name": "timezoned-date",
-  "version": "2.0.18",
+  "version": "2.0.19",
   "license": "Apache-2.0",
   "description": "Work with timezone-aware dates",
   "keywords": [

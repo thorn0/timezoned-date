@@ -23,6 +23,7 @@ jsdom.env({
 May also be useful for tests and for server-side rendering with React.
 
 [![Build Status](https://travis-ci.org/thorn0/timezoned-date.svg?branch=master)](https://travis-ci.org/thorn0/timezoned-date)
+[![npm](https://img.shields.io/npm/v/timezoned-date.svg)](https://www.npmjs.com/package/timezoned-date)
 
 Known issues:
 
