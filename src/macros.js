@@ -9,6 +9,9 @@ let function = macro {
         }
         return #{ function $name $args $body };
     }
+    case { _ $args $body } => {
+        return #{ function $args $body };
+    }
 }
 export function;
 

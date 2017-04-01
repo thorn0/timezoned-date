@@ -26,7 +26,8 @@
     },
     "env": {
         "es6": true,
-        "node": true
+        "node": true,
+        "amd": true
     },
     "extends": "eslint:recommended",
     "parser": "babel-eslint"
