@@ -5,6 +5,7 @@
 .jshintrc
 .editorconfig
 .npmignore
+.vscode
 /test262/
 .babelrc
 .travis.yml

@@ -1,23 +1,20 @@
-var assert = require("assert"),
-    TimezonedDate = require('../');
+var assert = require('assert'), timezonedDate = require('../');
 
 function assertSameInstant(actual, expected) {
-    "use strict";
-
+    'use strict';
     actual = new Date(actual);
     expected = new Date(expected);
 
-    assert.equal(+actual, +expected,
-        "expected " + actual.toISOString() +
-        " to be the same time as " + expected.toISOString()
+    assert.equal(
+        +actual,
+        +expected,
+        'expected ' + actual.toISOString() + ' to be the same time as ' + expected.toISOString()
     );
 }
 
 describe('TimezonedDate', function() {
-
-    "use strict";
-
-    var halfNoonUTC = new Date("2008-12-31T12:30Z"),
+    'use strict';
+    var halfNoonUTC = new Date('2008-12-31T12:30Z'),
         chatham = {
             toString: function() {
                 return 'Chatham';
@@ -26,10 +23,11 @@ describe('TimezonedDate', function() {
                 return 765;
             }
         },
+        ChathamDate = timezonedDate.makeConstructor(chatham),
         inChatham;
 
     beforeEach(function() {
-        inChatham = new TimezonedDate(halfNoonUTC, chatham);
+        inChatham = new ChathamDate(halfNoonUTC);
     });
 
     describe('#toTimeString', function() {
@@ -79,25 +77,9 @@ describe('TimezonedDate', function() {
         });
     });
 
-    describe('#offset', function() {
-        it('returns the original offset', function() {
-            assert.strictEqual(inChatham.offset(), chatham);
-        });
-    });
-
     describe('#getTimezoneOffset', function() {
         it('returns the inverse of the value of the supplied offset', function() {
             assert.equal(inChatham.getTimezoneOffset(), -765);
-        });
-    });
-
-    describe('#withOffset', function() {
-        it('returns a new TimezonedDate representing the same time with the given offset', function() {
-            var inParis = inChatham.withOffset(60);
-            assert.ok(inParis instanceof TimezonedDate, 'expected ' + inParis + ' to be a TimezonedDate');
-            assertSameInstant(inParis, inChatham);
-            assert.equal(inParis.offset(), 60);
-            assert.equal(inParis.getHours(), 13);
         });
     });
 
@@ -149,7 +131,7 @@ describe('TimezonedDate', function() {
     assertSetter('Seconds', 19, '2009-01-01T01:15:19+1245');
     assertSetter('Year', 102, '2002-01-01T01:15:00+1245');
 
-    assertSetter('Time', (new Date('2017-03-15T11:52:18+1245')).getTime(), '2017-03-15T11:52:18+1245');
+    assertSetter('Time', new Date('2017-03-15T11:52:18+1245').getTime(), '2017-03-15T11:52:18+1245');
 
     assertSetter('UTCDate', 4, '2008-12-04T12:30:00.000Z');
     assertSetter('UTCFullYear', 2010, '2010-12-31T12:30:00.000Z');
@@ -158,5 +140,4 @@ describe('TimezonedDate', function() {
     assertSetter('UTCMinutes', 44, '2008-12-31T12:44:00.000Z');
     assertSetter('UTCMonth', 7, '2008-08-31T12:30:00.000Z');
     assertSetter('UTCSeconds', 19, '2008-12-31T12:30:19.000Z');
-
 });

@@ -1,15 +1,12 @@
-var assert = require("assert"),
-    TimezonedDate = require('../');
+var assert = require('assert'), timezonedDate = require('../');
 
 describe('Compatibility with libraries', function() {
-    "use strict";
-
-    var nativeDate = Date,
-        moment, lodash;
+    'use strict';
+    var nativeDate = Date, moment, lodash;
 
     function tests() {
         [3, 4].forEach(function(lodashVersion) {
-            it('instances should be with Moment.js and Lodash ' + lodashVersion, function() {
+            it('should be compatible with Moment and Lodash ' + lodashVersion, function() {
                 var expected = 'Sat, 31 Dec 1949 21:00:00 GMT';
                 var date = new Date(1950, 0, 1, 1);
                 var cloneL = lodash[lodashVersion].cloneDeep(date);
@@ -22,9 +19,7 @@ describe('Compatibility with libraries', function() {
         });
     }
 
-    var MOMENT = './lib/moment-2.13.0',
-        LODASH3 = './lib/lodash-3.10.1',
-        LODASH4 = './lib/lodash-4.12.0';
+    var MOMENT = './lib/moment-2.13.0', LODASH3 = './lib/lodash-3.10.1', LODASH4 = './lib/lodash-4.12.0';
 
     function loadLibraries() {
         moment = require(MOMENT);
@@ -48,17 +43,16 @@ describe('Compatibility with libraries', function() {
     describe('loaded before overriding Date:', function() {
         beforeEach(function() {
             loadLibraries();
-            global.Date = TimezonedDate.makeConstructor(240);
+            global.Date = timezonedDate.makeConstructor(240);
         });
         tests();
     });
 
     describe('loaded after overriding Date:', function() {
         beforeEach(function() {
-            global.Date = TimezonedDate.makeConstructor(240);
+            global.Date = timezonedDate.makeConstructor(240);
             loadLibraries();
         });
         tests();
     });
-
 });

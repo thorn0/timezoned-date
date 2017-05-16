@@ -2,7 +2,8 @@
     "rules": {
         "indent": [
             2,
-            4
+            4,
+            { "SwitchCase": 1 }
         ],
         "quotes": [
             2,
@@ -19,7 +20,7 @@
         "no-unused-vars": [
             2, {
                 "args": "after-used",
-                "argsIgnorePattern": "^_",
+                "argsIgnorePattern": "^a\\d$",
                 "varsIgnorePattern": "^_"
             }
         ]

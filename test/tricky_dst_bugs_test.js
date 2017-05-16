@@ -1,10 +1,7 @@
-var assert = require("assert"),
-    TimezonedDate = require('../');
+var assert = require('assert'), timezonedDate = require('../');
 
 describe('DST bugs', function() {
-
-    "use strict";
-
+    'use strict';
     if (process.env.npm_config_quicktest) {
         return;
     }
@@ -13,10 +10,10 @@ describe('DST bugs', function() {
 
     beforeEach(function() {
         constructors = [
-            TimezonedDate.makeConstructor(0),
-            TimezonedDate.makeConstructor(-12 * 60),
-            TimezonedDate.makeConstructor(5 * 60 + 30),
-            TimezonedDate.makeConstructor(7 * 60 + 45)
+            timezonedDate.makeConstructor(0),
+            timezonedDate.makeConstructor(-12 * 60),
+            timezonedDate.makeConstructor(5 * 60 + 30),
+            timezonedDate.makeConstructor(7 * 60 + 45)
         ];
     });
 
@@ -39,7 +36,14 @@ describe('DST bugs', function() {
                     var str = '2016/' + (date.getMonth() + 1) + '/' + date.getDate() + ' ' + h + ':00:00';
                     var instance = new constructors[i](str);
                     assert.equal(instance.getHours(), h, str);
-                    str = '2016/' + addZero(date.getMonth() + 1) + '/' + addZero(date.getDate()) + ' ' + h + ':00:59';
+                    str =
+                        '2016/' +
+                        addZero(date.getMonth() + 1) +
+                        '/' +
+                        addZero(date.getDate()) +
+                        ' ' +
+                        h +
+                        ':00:59';
                     instance = new constructors[i](str);
                     assert.equal(instance.getHours(), h, str);
                 }

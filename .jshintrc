@@ -3,6 +3,7 @@
     "eqnull": true,
     "unused": "vars",
     "globals": {
-        "Symbol": false
+        "Symbol": false,
+        "define": false
     }
 }
