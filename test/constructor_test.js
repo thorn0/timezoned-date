@@ -16,6 +16,8 @@ describe('Constructor', function() {
             ['12 May 2016', '2016-05-12'],
             ['April 25 1986 23:23', '1986-04-25T23:23:00Z'],
             ['April 26 1986 01:23 GMT+0200', '1986-04-25T23:23:00Z'],
+            ['April 26 1986 01:23 GMT-0800', '1986-04-26T09:23:00Z'],
+            ['April 26 1986 01:23 PST', '1986-04-26T09:23:00Z'],
             [
                 {
                     toString: function() {
@@ -36,7 +38,7 @@ describe('Constructor', function() {
         });
     });
 
-    describe('and is called with', function() {
+    describe('called with', function() {
         var TzDate;
         beforeEach(function() {
             TzDate = timezonedDate.makeConstructor(540);
@@ -125,6 +127,8 @@ describe('Constructor', function() {
                 instance = new TzDate('2008-11-22T12');
                 assert.equal(instance.toString(), 'Invalid Date');
             });
+
+            // Node and IE parse these formats as UTC, Chrome parses them as local
             it('treats the time as UTC if the format is YYYY-MM-DDThh:mm', function() {
                 instance = new TzDate('2008-11-22T12:13');
                 assert.equal(instance.toISOString(), '2008-11-22T12:13:00.000Z');
@@ -140,6 +144,7 @@ describe('Constructor', function() {
                 assert.equal(instance.toISOString(), '2008-11-22T12:13:14.999Z');
                 assert.equal(instance.getHours(), 21);
             });
+
             it('treats the time as UTC if the format is YYYY-MM-DDThh:mm:ssZ', function() {
                 instance = new TzDate('2008-11-22T12:13:14Z');
                 assert.equal(instance.toISOString(), '2008-11-22T12:13:14.000Z');
@@ -163,14 +168,14 @@ describe('Constructor', function() {
         });
 
         describe('null', function() {
-            it('return treat null as 0 (the Unix epoch)', function() {
+            it('treats null as 0 (the Unix epoch)', function() {
                 instance = new TzDate(null);
                 assert.equal(instance.toISOString(), '1970-01-01T00:00:00.000Z');
             });
         });
 
         afterEach('instanceof check', function() {
-            assert.ok(instance instanceof TzDate, 'expected it to be instanceof the bound constructor');
+            assert.ok(instance instanceof TzDate, 'expected it to be instanceof TzDate');
             assert.ok(instance instanceof Date, 'expected it to be instanceof Date');
             instance = null;
         });

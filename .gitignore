@@ -3,3 +3,4 @@
 /test262/test262/
 /test262/prelude.js
 *.log
+/test/es2015_babel.js

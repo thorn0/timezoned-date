@@ -44,8 +44,7 @@ macro addSetters {
         letstx $nativeProto = [makeIdent("nativeProto", #{ $property })];
         letstx $protoMethods = [makeIdent("protoMethods", #{ $property })];
         letstx $getLocalDate = [makeIdent("getLocalDate", #{ $property })];
-        letstx $applyOffset = [makeIdent("applyOffset", #{ $property })];
-        letstx $offset = [makeIdent("offset", #{ $property })];
+        letstx $offsetInMilliseconds = [makeIdent("offsetInMilliseconds", #{ $property })];
 
         var property = unwrapSyntax(#{ $property });
 
@@ -62,7 +61,7 @@ macro addSetters {
             $protoMethods.$setterIdent = function $setterIdent($setterArgs) {
                 var localDate = $getLocalDate(this);
                 $nativeProto.$utcSetterIdent.apply(localDate, arguments);
-                return this.setTime($applyOffset(localDate, -$offset));
+                return this.setTime(localDate.getTime() - $offsetInMilliseconds);
             };
             $protoMethods.$utcSetterIdent = $nativeProto.$utcSetterIdent;
 

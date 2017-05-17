@@ -11,7 +11,7 @@
     'use strict';
     var MILLISECONDS_PER_MINUTE = 60 * 1000,
         // YYYY-MM-DD strings are parsed as UTC. See http://dygraphs.com/date-formats.html
-        TIMEZONED_STRING = /^\d\d\d\d(-\d\d){0,2}($|T)|(((GMT)?[\+\-]\d\d:?\d\d)|Z)(\s*\(.+\))?$/,
+        TIMEZONED_STRING = /^\d\d\d\d(-\d\d){0,2}($|T)|(((GMT)?[\+\-]\d\d:?\d\d)|Z)(\s*\(.+\))?$|([ECMP][SD]|GM|U)T[\s\/-]*$/,
         daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         NativeDate = Date,
@@ -66,17 +66,17 @@
                         if (!TIMEZONED_STRING.test(string)) {
                             // Let's try to add the offset to the string ourselves.
                             var date = new NativeDate(string + ' ' + formatOffset(offset));
-                            // TODO: can we use isInvalidDate here?
-                            if (!isNaN(date.getTime())) {
+                            if (!isInvalidDate(date)) {
                                 instance.setTime(date);
                             } else {
                                 // It's some strange date/time string that nonetheless was successfully parsed to a
                                 // valid local native Date. Our last resort is to simply shift its offset, which
                                 // however means that we can get a value off by 1 hour because of DST.
-                                applyOffset(
-                                    instance,
-                                    -nativeProto.getTimezoneOffset.apply(instance) - offset
-                                );
+                                var time =
+                                    instance.getTime() -
+                                    nativeProto.getTimezoneOffset.apply(instance) * MILLISECONDS_PER_MINUTE -
+                                    offsetInMilliseconds;
+                                instance.setTime(time);
                             }
                         }
                     }
@@ -92,7 +92,7 @@
             setPrototypeOf(instance, proto);
 
             // Trying to pass this tricky test: test262\test\built-ins\Date\subclassing.js
-            if (!(this instanceof Constructor)) {
+            if (this.constructor !== Constructor) {
                 var newTargetPrototype = Object.getPrototypeOf(this);
                 if (newTargetPrototype !== Object.prototype) {
                     setPrototypeOf(instance, newTargetPrototype);
@@ -178,7 +178,7 @@
             },
 
             getYear() {
-                return getLocalDate(this).getUTCFullYear() - 1900;
+                return this.getFullYear() - 1900;
             },
 
             setYear(year) {
@@ -196,7 +196,7 @@
             toLocaleTimeString: nativeProto.toLocaleTimeString
         };
 
-        // A Date whose "UTC time" is the local time of this object's real time.
+        // A Date whose "UTC time" === the local time of `date`.
         // That is, it is incorrect by `offset` minutes. Used for `getDate` et al.
         function getLocalDate(date) {
             return new NativeDate(date.getTime() + offsetInMilliseconds);
@@ -220,7 +220,7 @@
                 function() {
                     var localDate = getLocalDate(this);
                     nativeProto[utcSetterName].apply(localDate, arguments);
-                    return this.setTime(applyOffset(localDate, -offset));
+                    return this.setTime(localDate.getTime() - offsetInMilliseconds);
                 },
                 nativeProto[setterName].length,
                 setterName
@@ -264,11 +264,6 @@
         Object.defineProperties(proto, prototypePropertyDescriptors);
 
         return Constructor;
-    }
-
-    function applyOffset(date, offset) {
-        date.setTime(date.getTime() + MILLISECONDS_PER_MINUTE * offset);
-        return date;
     }
 
     function formatOffset(offset) {
@@ -328,7 +323,7 @@
     }
 
     function isInvalidDate(date) {
-        var v = date.getDate();
+        var v = date.getTime();
         return v !== v;
     }
 

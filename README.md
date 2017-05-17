@@ -43,4 +43,4 @@ Returns a constructor function compatible with `Date` bound to the specified off
 
 ## License
 
-Apache 2.0 © 2013-2017 James A. Rosen, Georgii Dolzhykov
+[Apache 2.0](LICENSE) © 2013-2017 James A. Rosen, Georgii Dolzhykov

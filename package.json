@@ -1,6 +1,6 @@
 {
   "name": "timezoned-date",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "license": "Apache-2.0",
   "description": "Constructors and objects behave exactly like built-in Date; the TZ offset is configurable",
   "keywords": [
@@ -35,14 +35,15 @@
   "scripts": {
     "lint": "eslint src/index.js --fix || true",
     "test": "npm run testown && npm run test262",
-    "testown": "mocha --timeout 5000",
+    "pretestown": "babel test/es2015_native.js -o test/es2015_babel.js",
+    "testown": "mocha --timeout 5000 test/*_test.js",
     "quicktest": "npm --quicktest=true run testown",
-    "pretest262": "find test262/test262 -maxdepth 0 || git clone https://github.com/tc39/test262.git test262/test262 --depth 1",
+    "pretest262": "test -d test262/test262 || git clone https://github.com/tc39/test262.git test262/test262 --depth 1",
     "test262": "cat test262/prelude.prefix lib/index.js test262/prelude.suffix > test262/prelude.js && test262-harness --prelude test262/prelude.js \"test262/test262/test/built-ins/Date/**/*.js\"",
     "prenative262": "npm run pretest262",
     "native262": "test262-harness \"test262/test262/test/built-ins/Date/**/*.js\"",
     "prepublish": "npm run lint && npm run build && npm test",
-    "build": "mkdir lib 2>nul & sjs -r -m ./src/macros.js src/index.js > ./lib/index.js && babel lib/index.js --out-file lib/index.js",
-    "watch": "babel src/index.js --out-dir lib --watch"
+    "prebuild": "test -d lib || mkdir lib",
+    "build": "sjs -r -m ./src/macros.js src/index.js > ./lib/index.js && babel lib/index.js -o lib/index.js"
   }
 }
