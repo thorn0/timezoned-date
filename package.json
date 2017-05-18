@@ -28,12 +28,14 @@
     "babel-eslint": "^7.0.0",
     "babel-preset-es2015": "^6.16.0",
     "eslint": "^3.8.0",
+    "if-node-version": "^1.1.1",
     "mocha": "~3.2.0",
+    "prettier": "^1",
     "sweet.js": "0.7.8",
     "test262-harness": "^1.5.6"
   },
   "scripts": {
-    "lint": "eslint src/index.js --fix || true",
+    "lint": "if-node-version \">=4\" eslint src/index.js --fix",
     "test": "npm run testown && npm run test262",
     "pretestown": "babel test/es2015_native.js -o test/es2015_babel.js",
     "testown": "mocha --timeout 5000 test/*_test.js",
@@ -42,8 +44,12 @@
     "test262": "cat test262/prelude.prefix lib/index.js test262/prelude.suffix > test262/prelude.js && test262-harness --prelude test262/prelude.js \"test262/test262/test/built-ins/Date/**/*.js\"",
     "prenative262": "npm run pretest262",
     "native262": "test262-harness \"test262/test262/test/built-ins/Date/**/*.js\"",
-    "prepublish": "npm run lint && npm run build && npm test",
+    "prepublish": "npm run lint && npm run formatsrc && npm run build && npm run formatlib && npm test",
     "prebuild": "test -d lib || mkdir lib",
-    "build": "sjs -r -m ./src/macros.js src/index.js > ./lib/index.js && babel lib/index.js -o lib/index.js"
+    "build": "npm run sweet && npm run babel",
+    "sweet": "sjs -r -m ./src/macros.js src/index.js > ./lib/index.js",
+    "babel": "babel lib/index.js -o lib/index.js",
+    "formatsrc": "if-node-version \">=4\" prettier --write --print-width 110 --tab-width 4 --single-quote src/index.js",
+    "formatlib": "if-node-version \">=4\" prettier --write --print-width 120 --tab-width 4 --single-quote lib/index.js"
   }
 }
