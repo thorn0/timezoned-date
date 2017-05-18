@@ -59,9 +59,7 @@ macro addSetters {
         return #{
 
             $protoMethods.$setterIdent = function $setterIdent($setterArgs) {
-                var localDate = $getLocalDate(this);
-                $nativeProto.$utcSetterIdent.apply(localDate, arguments);
-                return this.setTime(localDate.getTime() - $offsetInMilliseconds);
+                return this.setTime($nativeProto.$utcSetterIdent.apply($getLocalDate(this), arguments) - $offsetInMilliseconds);
             };
             $protoMethods.$utcSetterIdent = $nativeProto.$utcSetterIdent;
 

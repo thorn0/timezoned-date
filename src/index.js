@@ -218,9 +218,9 @@
             var setterName = 'set' + property, utcSetterName = 'setUTC' + property;
             protoMethods[setterName] = createFunction(
                 function() {
-                    var localDate = getLocalDate(this);
-                    nativeProto[utcSetterName].apply(localDate, arguments);
-                    return this.setTime(localDate.getTime() - offsetInMilliseconds);
+                    return this.setTime(
+                        nativeProto[utcSetterName].apply(getLocalDate(this), arguments) - offsetInMilliseconds
+                    );
                 },
                 nativeProto[setterName].length,
                 setterName
@@ -246,7 +246,8 @@
 
         var prototypePropertyDescriptors = makeMethodDescriptors(protoMethods);
 
-        if (typeof Symbol !== 'undefined' /* Node 0.10.x */) {
+        // Symbol is undefined in Node 0.10.x
+        if (typeof Symbol !== 'undefined') {
             if (Symbol.toStringTag) {
                 // Node v6+ or a polyfill
                 prototypePropertyDescriptors[Symbol.toStringTag] = {
